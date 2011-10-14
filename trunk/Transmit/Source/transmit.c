@@ -202,7 +202,7 @@ void transmit_Init( byte task_id )
   RegisterForKeys( transmit_TaskID );
   
   // By default, all devices start out in Group 1
-  transmit_Group.ID = 0x0001;
+  transmit_Group.ID = 0x0010;
   osal_memcpy( transmit_Group.name, "Group 1", 7  );
   aps_AddGroup( transmit_ENDPOINT, &transmit_Group );
 
@@ -246,15 +246,16 @@ UINT16 transmit_ProcessEvent( byte task_id, UINT16 events )
     {
       switch ( MSGpkt->hdr.event )
       {
-        case ZDO_CB_MSG:
+        case ZDO_CB_MSG: // ZDO incoming message callback
           transmit_ProcessZDOMsgs( (zdoIncomingMsg_t *)MSGpkt );
+          transmit_SendTheMessage(parseMessage(MSGpkt));
           break;
           
-        case KEY_CHANGE:
+        case KEY_CHANGE: // Key Events
           transmit_HandleKeys( ((keyChange_t *)MSGpkt)->state, ((keyChange_t *)MSGpkt)->keys );
           break;
 
-        case AF_DATA_CONFIRM_CMD:
+        case AF_DATA_CONFIRM_CMD: // Data confirmation
           // This message is received as a confirmation of a data packet sent.
           // The status is of ZStatus_t type [defined in ZComDef.h]
           // The message fields are defined in AF.h
@@ -272,11 +273,11 @@ UINT16 transmit_ProcessEvent( byte task_id, UINT16 events )
           }
           break;
 
-        case AF_INCOMING_MSG_CMD:
-          transmit_MessageMSGCB( MSGpkt );
+        case AF_INCOMING_MSG_CMD: // Incoming MSG type message
+          transmit_MessageMSGCB( MSGpkt ); //print the message to LCD
           break;
 
-        case ZDO_STATE_CHANGE:
+        case ZDO_STATE_CHANGE: // ZDO has changed the device's network state
           transmit_NwkState = (devStates_t)(MSGpkt->hdr.status);
           if ( (transmit_NwkState == DEV_ZB_COORD)
               || (transmit_NwkState == DEV_ROUTER)
@@ -309,7 +310,7 @@ UINT16 transmit_ProcessEvent( byte task_id, UINT16 events )
   if ( events & transmit_SEND_MSG_EVT )
   {
     // Send "the" message
-    transmit_SendTheMessage(parseMessage(MSGpkt));
+    //transmit_SendTheMessage(parseMessage(MSGpkt));
 
     // Setup to send message again
     osal_start_timerEx( transmit_TaskID,
@@ -419,26 +420,31 @@ void transmit_HandleKeys( byte shift, byte keys )
     if ( keys & HAL_KEY_SW_1 )
     {
       transmit_SendTheMessage("A Nguyen Van");
+      printText("A Nguyen Van","");
     }
 
     if ( keys & HAL_KEY_SW_2 )
     {
       transmit_SendTheMessage("B Nguyen Van");
+      printText("B Nguyen Van","");
     }
 
     if ( keys & HAL_KEY_SW_3 )
     {
       transmit_SendTheMessage("C Nguyen Van");
+      printText("C Nguyen Van","");
     }
 
     if ( keys & HAL_KEY_SW_4 )
     {
       transmit_SendTheMessage("D Nguyen Van");
+      printText("D Nguyen Van","");
     }
     
     if ( keys & HAL_KEY_SW_5 )
     {
-      aps_Group_t *grp;
+      printText("","");
+      /*aps_Group_t *grp;
       grp = aps_FindGroup( transmit_ENDPOINT, transmit_GROUP );
       if ( grp )
       {
@@ -449,7 +455,7 @@ void transmit_HandleKeys( byte shift, byte keys )
       {
         // Add to the flash group
         aps_AddGroup( transmit_ENDPOINT, &transmit_Group );
-      }
+      }*/
     }
     
   }
@@ -527,14 +533,11 @@ void transmit_SendTheMessage( char* content )
 }
 
 //*********************************************************************
-void printText(char* text1, char* text2)
-{
 #if defined( LCD_SUPPORTED )
+void printText(char* text1, char* text2){
   HalLcdWriteScreen(text1, text2);
-#elif defined( WIN32 )
-  WPRINTSTR(text1);
-#endif
 }
+#endif
 
 char* int2char(int num){
   unsigned char i=0,j=0;

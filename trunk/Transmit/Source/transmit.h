@@ -73,7 +73,7 @@ extern "C"
 #define transmit_SEND_MSG_EVT       0x0001
   
 // Group ID for Flash Command
-#define transmit_GROUP                  0x0001
+#define transmit_GROUP                  0x0010
 
 /*********************************************************************
  * MACROS
@@ -95,7 +95,6 @@ extern UINT16 transmit_ProcessEvent( byte task_id, UINT16 events );
 extern char* parseMessage( afIncomingMSGPacket_t *pkt );
 extern char* int2char(int num);
 extern void printText(char* text1, char* text2);
-
 /*********************************************************************
 *********************************************************************/
 
