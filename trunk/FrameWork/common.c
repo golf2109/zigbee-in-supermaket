@@ -4,6 +4,8 @@
 
 /*USER CODE*/
 #include "common.h"
+#include "hal_lcd.h"
+#include "OSAL.h"
 
 /*********************************************************************
  * SECURITY
@@ -31,7 +33,7 @@ void printText(char* text1, char* text2){
 #endif
 
 char* int2char(int num){
-  unsigned char i=0,j=0;
+  char i=0,j=0;
   int tmp = num;
   while(1){
     tmp = tmp/10;

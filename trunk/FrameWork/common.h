@@ -1,6 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <hal_types.h>
+
 /*********************************************************************
  * DATA FOR BASKET
  */
@@ -8,12 +10,12 @@
 #define PRODS_ID_LEN		7		//len of product_id
 #define OFFSET				PRODS_ID_LEN + 1	//offset beetwen two product_id
 #define BASKET_ID_LEN		8		//len of basket_id
-typedef struct Basket{
+typedef struct {
 	char basket_id[BASKET_ID_LEN];
 	uint8 len;
 	uint8 offset;
 	char prods_id[MAX_PRODS*(OFFSET)];
-};
+}Basket;
 
 /*********************************************************************
  * MODE
@@ -66,7 +68,7 @@ typedef struct Basket{
 /*********************************************************************
  * COMMON FUNCTIONS
  */
- extern char* int2char(int num)();
+ extern char* int2char(int num);
  extern void printText(char* text1, char* text2);
  
 #endif
