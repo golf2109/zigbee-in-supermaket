@@ -17,15 +17,73 @@
 /*USER CODE*/
 #include "../common.h"
 #include "cashier.h"
+#include "buffer.h"
 
 /*********************************************************************
  * SECURITY
  */
 
 /*********************************************************************
- * CONNECT TO PC
+ * BARCODE SCANNER
  */
+ ringBuf_t basket_buff;
+/*********************************************************************
+ * @brief   Initialization UART use for receive data from barcode scanner
+ *
+ * @param   0 or 1
+ *
+ * @return  none
+ */
+void UART_Init( uint8 port ){
  
+  halUARTCfg_t uartConfig;
+  
+  bufInit(&basket_buff);
+    
+  uartConfig.configured           = TRUE;
+  uartConfig.baudRate             = UART_SCANNER_BAUD;
+  uartConfig.flowControl          = TRUE;
+  uartConfig.flowControlThreshold = UART_SCANNER_THRESH;
+  uartConfig.rx.maxBufSize        = UART_SCANNER_RX_SIZE;
+  uartConfig.tx.maxBufSize        = UART_SCANNER_TX_SIZE;
+  uartConfig.idleTimeout          = UART_SCANNER_TIMEOUT;
+  uartConfig.intEnable            = TRUE;
+  uartConfig.callBackFunc         = UART_SCANNER_process_evt;
+  if(!port)
+	HalUARTOpen (HAL_UART_PORT_0, &uartConfig);
+  else
+	HalUARTOpen (HAL_UART_PORT_1, &uartConfig);
+}
+
+/*********************************************************************
+ * @brief   read every basket_id from rx_buff and put it to ringBuf_t
+ *
+ * @param   none
+ *
+ * @return  none
+ */
+static void read_scanner(void){
+	uint8 tmp_buf[BASKET_ID_LEN];
+	HalUARTRead(UART_SCANNER_PORT, &tmp_buf, BASKET_ID_LEN);
+	bufPut(&basket_buff,&tmp_buf,BASKET_ID_LEN);
+}
+/*********************************************************************
+ * @brief   Process all event form UART that connect to barcode scannner
+ *
+ * @param   - port of the UART
+ *			- event code
+ *
+ * @return  none
+ */
+static void UART_SCANNER_process_evt(uint8 port, uint8 event){
+	if (event & (HAL_UART_RX_FULL | HAL_UART_RX_ABOUT_FULL)){
+		uint16 rx_buf_len = Hal_UART_RxBufLen (UART_SCANNER_PORT);
+		uint8 num_basketId = rx_buf_len/BASKET_ID_LEN,i;
+		for(i=0;i<num_basketId;i++)
+			read_scanner();
+	}
+}
+
  /*********************************************************************
  * DIGI ME 9210
  */
@@ -74,6 +132,9 @@ endPointDesc_t epDesc;
 void client_Init( byte task_id ){
 
   TaskID = task_id;
+  
+  //Set up for UART
+  UART_Init(UART_SCANNER_PORT);
   
   // Setup for the destination address - Group 1
   BrdAddr.addrMode = (afAddrMode_t)AddrBroadcast;
