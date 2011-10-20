@@ -3,12 +3,15 @@
  */
 #include "OSAL.h"
 #include "AF.h"
+#include "OnBoard.h"
+#include "OSAL_Tasks.h"
 #include "ZDApp.h"
 #include "ZDObject.h"
 #include "ZDProfile.h"
 #include "DebugTrace.h"
 
 /* HAL */
+#include "hal_drivers.h"
 #include "hal_lcd.h"
 #include "hal_led.h"
 #include "hal_key.h"
@@ -64,8 +67,8 @@ void UART_Init( uint8 port ){
  */
 static void read_scanner(void){
 	uint8 tmp_buf[BASKET_ID_LEN];
-	HalUARTRead(UART_SCANNER_PORT, &tmp_buf, BASKET_ID_LEN);
-	bufPut(&basket_buff,&tmp_buf,BASKET_ID_LEN);
+	HalUARTRead(UART_SCANNER_PORT, tmp_buf, BASKET_ID_LEN);
+	bufPut(&basket_buff,tmp_buf,BASKET_ID_LEN);
 }
 /*********************************************************************
  * @brief   Process all event form UART that connect to barcode scannner
@@ -117,7 +120,6 @@ const SimpleDescriptionFormat_t SimpleDesc = {
 endPointDesc_t epDesc;
  
 /*********************************************************************
- * THIS FUNCTION IS FOR REF. CHANGE IF NEED
  * @brief   Initialization function for the Task.
  *          This is called during initialization and should contain
  *          any application specific initialization (ie. hardware
@@ -129,9 +131,9 @@ endPointDesc_t epDesc;
  *
  * @return  none
  */
-void client_Init( byte task_id ){
+void cashier_Init( byte task_id ){
 
-  TaskID = task_id;
+  byte TaskID = task_id;
   
   //Set up for UART
   UART_Init(UART_SCANNER_PORT);
@@ -159,8 +161,6 @@ void client_Init( byte task_id ){
 }
 
 /*********************************************************************
- * THIS FUNCTION IS FOR REF. CHANGE IF NEED
- *
  * @brief   Client Task event processor.  This function
  *          is called to process all events for the task.  Events
  *          include timers, messages and any other user defined events.
@@ -171,7 +171,7 @@ void client_Init( byte task_id ){
  *
  * @return  none
  */
-UINT16 client_ProcessEvent( byte task_id, UINT16 events ){
+UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
 
   afIncomingMSGPacket_t *MSGpkt;
   afDataConfirm_t *afDataConfirm;
@@ -184,7 +184,7 @@ UINT16 client_ProcessEvent( byte task_id, UINT16 events ){
 
   if ( events & SYS_EVENT_MSG ){ 
   
-    MSGpkt = (afIncomingMSGPacket_t *)osal_msg_receive( TaskID );
+    MSGpkt = (afIncomingMSGPacket_t *)osal_msg_receive( task_id );
     while ( MSGpkt ){
 	
       switch ( MSGpkt->hdr.event ){
@@ -212,7 +212,7 @@ UINT16 client_ProcessEvent( byte task_id, UINT16 events ){
       osal_msg_deallocate( (uint8 *)MSGpkt );
 
       // Next
-      MSGpkt = (afIncomingMSGPacket_t *)osal_msg_receive( TaskID );
+      MSGpkt = (afIncomingMSGPacket_t *)osal_msg_receive( task_id );
     }
 
     // return unprocessed events
