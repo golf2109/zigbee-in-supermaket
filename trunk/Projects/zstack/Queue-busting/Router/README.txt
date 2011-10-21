@@ -1,0 +1,1 @@
+Router can be a Handheld or a Cashier. Commonly, Router is supplied by power, not battery.
