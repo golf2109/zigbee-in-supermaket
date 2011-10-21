@@ -1,0 +1,1 @@
+Hardware: Digi@Connect ME 9210
