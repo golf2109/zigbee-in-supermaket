@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<workspace>
+  <project>
+    <path>$WS_DIR$\Cashier\CC2530DB\cashier.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\Handheld\CC2530DB\Handheld.ewp</path>
+  </project>
+  <batchBuild/>
+</workspace>
+
+
