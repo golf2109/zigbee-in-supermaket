@@ -27,8 +27,14 @@
  * GLOBAL FUNCTIONS
  */
 #if defined( LCD_SUPPORTED )
-void printText(char* text1, char* text2){
-  HalLcdWriteScreen(text1, text2);
+void printText(char* text, uint8 line){
+  if(line==1)
+    HalLcdWriteString(text, HAL_LCD_LINE_1 );
+  else if(line==2)
+    HalLcdWriteString(text, HAL_LCD_LINE_2 );
+  else
+    HalLcdWriteString(text, HAL_LCD_LINE_3 );
+  //HalLcdWriteScreen(text1, text2);
 }
 #endif
 

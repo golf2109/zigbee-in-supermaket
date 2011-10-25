@@ -6,10 +6,10 @@
 /*********************************************************************
  * DATA FOR BASKET
  */
-#define MAX_PRODS			100		//max products in one basket
+#define MAX_PRODS		100		//max products in one basket
 #define PRODS_ID_LEN		7		//len of product_id
-#define OFFSET				PRODS_ID_LEN + 1	//offset beetwen two product_id
-#define BASKET_ID_LEN		8		//len of basket_id
+#define OFFSET			PRODS_ID_LEN + 1	//offset beetwen two product_id
+#define BASKET_ID_LEN		15		//len of basket_id
 typedef struct {
 	char basket_id[BASKET_ID_LEN];
 	uint8 len;
@@ -69,6 +69,6 @@ typedef struct {
  * COMMON FUNCTIONS
  */
  extern char* int2char(int num);
- extern void printText(char* text1, char* text2);
+ extern void printText(char* text, uint8 line);
  
 #endif
