@@ -82,11 +82,11 @@ static void read_scanner(void){
  *
  * @return  none
  */
-static void UART_SCANNER_print(){
+/*static void UART_SCANNER_print(){
   uint8 tmp[BASKET_ID_LEN];
   bufGet(&basket_buff, tmp, BASKET_ID_LEN);
   printText((char*)tmp,3);
-}
+}*/
 
 
 /*********************************************************************
@@ -97,7 +97,9 @@ static void UART_SCANNER_print(){
  * @return  TRUE if it's basket id
  */
 static bool Check_basket_id_format(char* id){
-  if(*(id)=='#')  return TRUE;
+  if(osal_strlen(id) != BASKET_ID_LEN) return FALSE;
+  //basket_id must begin with an alphabetic
+  if(((*id)>=65 && (*id)<=90) || ((*id)>=97 && (*id)<=122)) return TRUE;
   else return FALSE;
 }
 
@@ -134,6 +136,7 @@ static void UART_SCANNER_process_evt(uint8 port, uint8 event){
     if(Check_basket_id_format((char*)tmp)==TRUE){
       SendMessage(BrdAddr,(char*)tmp);
     }
+    printText("Request for basket",2);
     printText((char*)tmp,3);
   }
 }
