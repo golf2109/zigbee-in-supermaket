@@ -70,5 +70,6 @@ typedef struct {
  */
  extern char* int2char(int num);
  extern void printText(char* text, uint8 line);
+ extern uint8 strcmp(char* txt1, char* txt2);
  
 #endif
