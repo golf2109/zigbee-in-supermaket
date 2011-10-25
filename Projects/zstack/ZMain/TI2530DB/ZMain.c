@@ -342,7 +342,8 @@ static void zmain_lcd_init ( void )
 {
 #ifdef SERIAL_DEBUG_SUPPORTED
   {
-    HalLcdWriteString( "TexasInstruments", HAL_LCD_LINE_1 );
+    //HalLcdWriteString( "TexasInstruments", HAL_LCD_LINE_1 );
+    HalLcdWriteString( "Q_Busting", HAL_LCD_LINE_1 );
 
 #if defined( MT_MAC_FUNC )
 #if defined( ZDO_COORDINATOR )
