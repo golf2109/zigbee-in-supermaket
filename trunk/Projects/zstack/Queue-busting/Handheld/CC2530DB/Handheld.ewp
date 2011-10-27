@@ -278,7 +278,8 @@
           <state>MT_TASK</state>
           <state>MT_SYS_FUNC</state>
           <state>MT_ZDO_FUNC</state>
-          <state>LCD_SUPPORTED=DEBUG</state>
+          <state>HAL_UART</state>
+          <state>LCD_SUPPORTED=BEBUG</state>
         </option>
         <option>
           <name>CCPreprocFile</name>
@@ -446,6 +447,9 @@
           <name>CCIncludePath2</name>
           <state>$PROJ_DIR$</state>
           <state>$PROJ_DIR$\..\Source</state>
+          <state>$PROJ_DIR$\..\Source\Drivers</state>
+          <state>$PROJ_DIR$\..\Source\Drivers\M25PEx0</state>
+          <state>$PROJ_DIR$\..\Source\Drivers\Scanner</state>
           <state>$PROJ_DIR$\..\..\..\ZMain\TI2530DB</state>
           <state>$PROJ_DIR$\..\..\..\..\..\Components\hal\include</state>
           <state>$PROJ_DIR$\..\..\..\..\..\Components\hal\target\CC2530EB</state>
@@ -3181,6 +3185,12 @@
   <group>
     <name>App</name>
     <file>
+      <name>$PROJ_DIR$\..\Source\Drivers\Scanner\BC_Scanner.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\Source\Drivers\M25PEx0\dataflash.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\Source\Handheld.c</name>
     </file>
     <file>
@@ -3188,6 +3198,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\Source\OSAL_Handheld.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\Source\Drivers\M25PEx0\Serialize.c</name>
     </file>
   </group>
   <group>

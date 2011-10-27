@@ -1,5 +1,5 @@
 /******************************************************************************
-  Filename:       GenericApp.c
+  Filename:       HandheldApp.c
   Revised:        $Date: 2010-12-21 10:27:34 -0800 (Tue, 21 Dec 2010) $
   Revision:       $Revision: 24670 $
 
@@ -96,29 +96,29 @@
  */
 
 // This list should be filled with Application specific Cluster IDs.
-const cId_t GenericApp_ClusterList[GENERICAPP_MAX_CLUSTERS] =
+const cId_t HandheldApp_ClusterList[HANDHELDAPP_MAX_CLUSTERS] =
 {
-  GENERICAPP_CLUSTERID
+  HANDHELDAPP_CLUSTERID
 };
 
-const SimpleDescriptionFormat_t GenericApp_SimpleDesc =
+const SimpleDescriptionFormat_t HandheldApp_SimpleDesc =
 {
-  GENERICAPP_ENDPOINT,              //  int Endpoint;
-  GENERICAPP_PROFID,                //  uint16 AppProfId[2];
-  GENERICAPP_DEVICEID,              //  uint16 AppDeviceId[2];
-  GENERICAPP_DEVICE_VERSION,        //  int   AppDevVer:4;
-  GENERICAPP_FLAGS,                 //  int   AppFlags:4;
-  GENERICAPP_MAX_CLUSTERS,          //  byte  AppNumInClusters;
-  (cId_t *)GenericApp_ClusterList,  //  byte *pAppInClusterList;
-  GENERICAPP_MAX_CLUSTERS,          //  byte  AppNumInClusters;
-  (cId_t *)GenericApp_ClusterList   //  byte *pAppInClusterList;
+  HANDHELDAPP_ENDPOINT,              //  int Endpoint;
+  HANDHELDAPP_PROFID,                //  uint16 AppProfId[2];
+  HANDHELDAPP_DEVICEID,              //  uint16 AppDeviceId[2];
+  HANDHELDAPP_DEVICE_VERSION,        //  int   AppDevVer:4;
+  HANDHELDAPP_FLAGS,                 //  int   AppFlags:4;
+  HANDHELDAPP_MAX_CLUSTERS,          //  byte  AppNumInClusters;
+  (cId_t *)HandheldApp_ClusterList,  //  byte *pAppInClusterList;
+  HANDHELDAPP_MAX_CLUSTERS,          //  byte  AppNumInClusters;
+  (cId_t *)HandheldApp_ClusterList   //  byte *pAppInClusterList;
 };
 
 // This is the Endpoint/Interface description.  It is defined here, but
-// filled-in in GenericApp_Init().  Another way to go would be to fill
+// filled-in in HandheldApp_Init().  Another way to go would be to fill
 // in the structure here and make it a "const" (in code space).  The
 // way it's defined in this sample app it is define in RAM.
-endPointDesc_t GenericApp_epDesc;
+endPointDesc_t HandheldApp_epDesc;
 
 /*********************************************************************
  * EXTERNAL VARIABLES
@@ -131,23 +131,23 @@ endPointDesc_t GenericApp_epDesc;
 /*********************************************************************
  * LOCAL VARIABLES
  */
-byte GenericApp_TaskID;   // Task ID for internal task/event processing
+byte HandheldApp_TaskID;   // Task ID for internal task/event processing
                           // This variable will be received when
-                          // GenericApp_Init() is called.
-devStates_t GenericApp_NwkState;
+                          // HandheldApp_Init() is called.
+devStates_t HandheldApp_NwkState;
 
 
-byte GenericApp_TransID;  // This is the unique message ID (counter)
+byte HandheldApp_TransID;  // This is the unique message ID (counter)
 
-afAddrType_t GenericApp_DstAddr;
+afAddrType_t HandheldApp_DstAddr;
 
 /*********************************************************************
  * LOCAL FUNCTIONS
  */
-void GenericApp_ProcessZDOMsgs( zdoIncomingMsg_t *inMsg );
-void GenericApp_HandleKeys( byte shift, byte keys );
-void GenericApp_MessageMSGCB( afIncomingMSGPacket_t *pckt );
-void GenericApp_SendTheMessage( void );
+void HandheldApp_ProcessZDOMsgs( zdoIncomingMsg_t *inMsg );
+void HandheldApp_HandleKeys( byte shift, byte keys );
+void HandheldApp_MessageMSGCB( afIncomingMSGPacket_t *pckt );
+void HandheldApp_SendTheMessage( void );
 
 /*********************************************************************
  * NETWORK LAYER CALLBACKS
@@ -158,7 +158,7 @@ void GenericApp_SendTheMessage( void );
  */
 
 /*********************************************************************
- * @fn      GenericApp_Init
+ * @fn      HandheldApp_Init
  *
  * @brief   Initialization function for the Generic App Task.
  *          This is called during initialization and should contain
@@ -171,44 +171,44 @@ void GenericApp_SendTheMessage( void );
  *
  * @return  none
  */
-void GenericApp_Init( byte task_id )
+void HandheldApp_Init( byte task_id )
 {
-  GenericApp_TaskID = task_id;
-  GenericApp_NwkState = DEV_INIT;
-  GenericApp_TransID = 0;
+  HandheldApp_TaskID = task_id;
+  HandheldApp_NwkState = DEV_INIT;
+  HandheldApp_TransID = 0;
 
   // Device hardware initialization can be added here or in main() (Zmain.c).
   // If the hardware is application specific - add it here.
   // If the hardware is other parts of the device add it in main().
 
-  GenericApp_DstAddr.addrMode = (afAddrMode_t)AddrNotPresent;
-  GenericApp_DstAddr.endPoint = 0;
-  GenericApp_DstAddr.addr.shortAddr = 0;
+  HandheldApp_DstAddr.addrMode = (afAddrMode_t)AddrNotPresent;
+  HandheldApp_DstAddr.endPoint = 0;
+  HandheldApp_DstAddr.addr.shortAddr = 0;
 
   // Fill out the endpoint description.
-  GenericApp_epDesc.endPoint = GENERICAPP_ENDPOINT;
-  GenericApp_epDesc.task_id = &GenericApp_TaskID;
-  GenericApp_epDesc.simpleDesc
-            = (SimpleDescriptionFormat_t *)&GenericApp_SimpleDesc;
-  GenericApp_epDesc.latencyReq = noLatencyReqs;
+  HandheldApp_epDesc.endPoint = HANDHELDAPP_ENDPOINT;
+  HandheldApp_epDesc.task_id = &HandheldApp_TaskID;
+  HandheldApp_epDesc.simpleDesc
+            = (SimpleDescriptionFormat_t *)&HandheldApp_SimpleDesc;
+  HandheldApp_epDesc.latencyReq = noLatencyReqs;
 
   // Register the endpoint description with the AF
-  afRegister( &GenericApp_epDesc );
+  afRegister( &HandheldApp_epDesc );
 
   // Register for all key events - This app will handle all key events
-  RegisterForKeys( GenericApp_TaskID );
+  RegisterForKeys( HandheldApp_TaskID );
 
   // Update the display
 #if defined ( LCD_SUPPORTED )
-    HalLcdWriteString( "GenericApp", HAL_LCD_LINE_1 );
+    HalLcdWriteString( "HandheldApp", HAL_LCD_LINE_1 );
 #endif
 
-  ZDO_RegisterForZDOMsg( GenericApp_TaskID, End_Device_Bind_rsp );
-  ZDO_RegisterForZDOMsg( GenericApp_TaskID, Match_Desc_rsp );
+  ZDO_RegisterForZDOMsg( HandheldApp_TaskID, End_Device_Bind_rsp );
+  ZDO_RegisterForZDOMsg( HandheldApp_TaskID, Match_Desc_rsp );
 }
 
 /*********************************************************************
- * @fn      GenericApp_ProcessEvent
+ * @fn      HandheldApp_ProcessEvent
  *
  * @brief   Generic Application Task event processor.  This function
  *          is called to process all events for the task.  Events
@@ -220,7 +220,7 @@ void GenericApp_Init( byte task_id )
  *
  * @return  none
  */
-UINT16 GenericApp_ProcessEvent( byte task_id, UINT16 events )
+UINT16 HandheldApp_ProcessEvent( byte task_id, UINT16 events )
 {
   afIncomingMSGPacket_t *MSGpkt;
   afDataConfirm_t *afDataConfirm;
@@ -233,17 +233,17 @@ UINT16 GenericApp_ProcessEvent( byte task_id, UINT16 events )
 
   if ( events & SYS_EVENT_MSG )
   {
-    MSGpkt = (afIncomingMSGPacket_t *)osal_msg_receive( GenericApp_TaskID );
+    MSGpkt = (afIncomingMSGPacket_t *)osal_msg_receive( HandheldApp_TaskID );
     while ( MSGpkt )
     {
       switch ( MSGpkt->hdr.event )
       {
         case ZDO_CB_MSG:
-          GenericApp_ProcessZDOMsgs( (zdoIncomingMsg_t *)MSGpkt );
+          HandheldApp_ProcessZDOMsgs( (zdoIncomingMsg_t *)MSGpkt );
           break;
 
         case KEY_CHANGE:
-          GenericApp_HandleKeys( ((keyChange_t *)MSGpkt)->state, ((keyChange_t *)MSGpkt)->keys );
+          HandheldApp_HandleKeys( ((keyChange_t *)MSGpkt)->state, ((keyChange_t *)MSGpkt)->keys );
           break;
 
         case AF_DATA_CONFIRM_CMD:
@@ -265,19 +265,19 @@ UINT16 GenericApp_ProcessEvent( byte task_id, UINT16 events )
           break;
 
         case AF_INCOMING_MSG_CMD:
-          GenericApp_MessageMSGCB( MSGpkt );
+          HandheldApp_MessageMSGCB( MSGpkt );
           break;
 
         case ZDO_STATE_CHANGE:
-          GenericApp_NwkState = (devStates_t)(MSGpkt->hdr.status);
-          if ( (GenericApp_NwkState == DEV_ZB_COORD)
-              || (GenericApp_NwkState == DEV_ROUTER)
-              || (GenericApp_NwkState == DEV_END_DEVICE) )
+          HandheldApp_NwkState = (devStates_t)(MSGpkt->hdr.status);
+          if ( (HandheldApp_NwkState == DEV_ZB_COORD)
+              || (HandheldApp_NwkState == DEV_ROUTER)
+              || (HandheldApp_NwkState == DEV_END_DEVICE) )
           {
             // Start sending "the" message in a regular interval.
-            osal_start_timerEx( GenericApp_TaskID,
-                                GENERICAPP_SEND_MSG_EVT,
-                                GENERICAPP_SEND_MSG_TIMEOUT );
+            osal_start_timerEx( HandheldApp_TaskID,
+                                HANDHELDAPP_SEND_MSG_EVT,
+                                HANDHELDAPP_SEND_MSG_TIMEOUT );
           }
           break;
 
@@ -289,7 +289,7 @@ UINT16 GenericApp_ProcessEvent( byte task_id, UINT16 events )
       osal_msg_deallocate( (uint8 *)MSGpkt );
 
       // Next
-      MSGpkt = (afIncomingMSGPacket_t *)osal_msg_receive( GenericApp_TaskID );
+      MSGpkt = (afIncomingMSGPacket_t *)osal_msg_receive( HandheldApp_TaskID );
     }
 
     // return unprocessed events
@@ -297,19 +297,19 @@ UINT16 GenericApp_ProcessEvent( byte task_id, UINT16 events )
   }
 
   // Send a message out - This event is generated by a timer
-  //  (setup in GenericApp_Init()).
-  if ( events & GENERICAPP_SEND_MSG_EVT )
+  //  (setup in HandheldApp_Init()).
+  if ( events & HANDHELDAPP_SEND_MSG_EVT )
   {
     // Send "the" message
-    GenericApp_SendTheMessage();
+    HandheldApp_SendTheMessage();
 
     // Setup to send message again
-    osal_start_timerEx( GenericApp_TaskID,
-                        GENERICAPP_SEND_MSG_EVT,
-                        GENERICAPP_SEND_MSG_TIMEOUT );
+    osal_start_timerEx( HandheldApp_TaskID,
+                        HANDHELDAPP_SEND_MSG_EVT,
+                        HANDHELDAPP_SEND_MSG_TIMEOUT );
 
     // return unprocessed events
-    return (events ^ GENERICAPP_SEND_MSG_EVT);
+    return (events ^ HANDHELDAPP_SEND_MSG_EVT);
   }
 
   // Discard unknown events
@@ -321,7 +321,7 @@ UINT16 GenericApp_ProcessEvent( byte task_id, UINT16 events )
  */
 
 /*********************************************************************
- * @fn      GenericApp_ProcessZDOMsgs()
+ * @fn      HandheldApp_ProcessZDOMsgs()
  *
  * @brief   Process response messages
  *
@@ -329,7 +329,7 @@ UINT16 GenericApp_ProcessEvent( byte task_id, UINT16 events )
  *
  * @return  none
  */
-void GenericApp_ProcessZDOMsgs( zdoIncomingMsg_t *inMsg )
+void HandheldApp_ProcessZDOMsgs( zdoIncomingMsg_t *inMsg )
 {
   switch ( inMsg->clusterID )
   {
@@ -355,10 +355,10 @@ void GenericApp_ProcessZDOMsgs( zdoIncomingMsg_t *inMsg )
         {
           if ( pRsp->status == ZSuccess && pRsp->cnt )
           {
-            GenericApp_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;
-            GenericApp_DstAddr.addr.shortAddr = pRsp->nwkAddr;
+            HandheldApp_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;
+            HandheldApp_DstAddr.addr.shortAddr = pRsp->nwkAddr;
             // Take the first endpoint, Can be changed to search through endpoints
-            GenericApp_DstAddr.endPoint = pRsp->epList[0];
+            HandheldApp_DstAddr.endPoint = pRsp->epList[0];
 
             // Light LED
             HalLedSet( HAL_LED_4, HAL_LED_MODE_ON );
@@ -371,7 +371,7 @@ void GenericApp_ProcessZDOMsgs( zdoIncomingMsg_t *inMsg )
 }
 
 /*********************************************************************
- * @fn      GenericApp_HandleKeys
+ * @fn      HandheldApp_HandleKeys
  *
  * @brief   Handles all key events for this device.
  *
@@ -384,7 +384,7 @@ void GenericApp_ProcessZDOMsgs( zdoIncomingMsg_t *inMsg )
  *
  * @return  none
  */
-void GenericApp_HandleKeys( byte shift, byte keys )
+void HandheldApp_HandleKeys( byte shift, byte keys )
 {
   zAddrType_t dstAddr;
 
@@ -426,10 +426,10 @@ void GenericApp_HandleKeys( byte shift, byte keys )
       dstAddr.addrMode = Addr16Bit;
       dstAddr.addr.shortAddr = 0x0000; // Coordinator
       ZDP_EndDeviceBindReq( &dstAddr, NLME_GetShortAddr(),
-                            GenericApp_epDesc.endPoint,
-                            GENERICAPP_PROFID,
-                            GENERICAPP_MAX_CLUSTERS, (cId_t *)GenericApp_ClusterList,
-                            GENERICAPP_MAX_CLUSTERS, (cId_t *)GenericApp_ClusterList,
+                            HandheldApp_epDesc.endPoint,
+                            HANDHELDAPP_PROFID,
+                            HANDHELDAPP_MAX_CLUSTERS, (cId_t *)HandheldApp_ClusterList,
+                            HANDHELDAPP_MAX_CLUSTERS, (cId_t *)HandheldApp_ClusterList,
                             FALSE );
     }
 
@@ -444,9 +444,9 @@ void GenericApp_HandleKeys( byte shift, byte keys )
       dstAddr.addrMode = AddrBroadcast;
       dstAddr.addr.shortAddr = NWK_BROADCAST_SHORTADDR;
       ZDP_MatchDescReq( &dstAddr, NWK_BROADCAST_SHORTADDR,
-                        GENERICAPP_PROFID,
-                        GENERICAPP_MAX_CLUSTERS, (cId_t *)GenericApp_ClusterList,
-                        GENERICAPP_MAX_CLUSTERS, (cId_t *)GenericApp_ClusterList,
+                        HANDHELDAPP_PROFID,
+                        HANDHELDAPP_MAX_CLUSTERS, (cId_t *)HandheldApp_ClusterList,
+                        HANDHELDAPP_MAX_CLUSTERS, (cId_t *)HandheldApp_ClusterList,
                         FALSE );
     }
   }
@@ -457,7 +457,7 @@ void GenericApp_HandleKeys( byte shift, byte keys )
  */
 
 /*********************************************************************
- * @fn      GenericApp_MessageMSGCB
+ * @fn      HandheldApp_MessageMSGCB
  *
  * @brief   Data message processor callback.  This function processes
  *          any incoming data - probably from other devices.  So, based
@@ -467,11 +467,11 @@ void GenericApp_HandleKeys( byte shift, byte keys )
  *
  * @return  none
  */
-void GenericApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
+void HandheldApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
 {
   switch ( pkt->clusterId )
   {
-    case GENERICAPP_CLUSTERID:
+    case HANDHELDAPP_CLUSTERID:
       // "the" message
 #if defined( LCD_SUPPORTED )
       HalLcdWriteScreen( (char*)pkt->cmd.Data, "rcvd" );
@@ -483,7 +483,7 @@ void GenericApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
 }
 
 /*********************************************************************
- * @fn      GenericApp_SendTheMessage
+ * @fn      HandheldApp_SendTheMessage
  *
  * @brief   Send "the" message.
  *
@@ -491,15 +491,15 @@ void GenericApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
  *
  * @return  none
  */
-void GenericApp_SendTheMessage( void )
+void HandheldApp_SendTheMessage( void )
 {
   char theMessageData[] = "Hello World";
 
-  if ( AF_DataRequest( &GenericApp_DstAddr, &GenericApp_epDesc,
-                       GENERICAPP_CLUSTERID,
+  if ( AF_DataRequest( &HandheldApp_DstAddr, &HandheldApp_epDesc,
+                       HANDHELDAPP_CLUSTERID,
                        (byte)osal_strlen( theMessageData ) + 1,
                        (byte *)&theMessageData,
-                       &GenericApp_TransID,
+                       &HandheldApp_TransID,
                        AF_DISCV_ROUTE, AF_DEFAULT_RADIUS ) == afStatus_SUCCESS )
   {
     // Successfully requested to be sent.
