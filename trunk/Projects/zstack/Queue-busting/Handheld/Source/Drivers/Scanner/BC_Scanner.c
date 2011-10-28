@@ -1,5 +1,10 @@
 #include "hal_uart.h"
+#include "OSAL.h"
+#include "buffer.h"
+#include "Handheld.h" //For HandheldApp_TaskID,task event
 #include "BC_Scanner.h"
+
+
 //Configure UART port fot BC Scanner
 #define BC_SCANNER_PORT      0
 #define BC_SCANNER_BAUD      HAL_UART_BR_9600
@@ -10,7 +15,10 @@
 #define BC_SCANNER_LOOPBACK  FALSE
 #define BC_SCANNER_TX_MAX    80
 #define BC_SCANNER_RSP_CNT   4
-static void BC_Scanner_CallBack(uint8 port, uint8 event);
+
+extern byte HandheldApp_TaskID;
+extern ringBuf_t ScannerBuf;
+//
 void BC_ScannerInit(void){
   halUARTCfg_t uartConfig;
   uartConfig.configured           = TRUE;              // 2x30 don't care - see uart driver.
@@ -33,10 +41,27 @@ void BC_ScannerInit(void){
  *
  * @return  none
  */
-static void BC_Scanner_CallBack(uint8 port, uint8 event){
+void BC_Scanner_CallBack(uint8 port, uint8 event){
+  
   //if rx_buffer have data, read it and push to basket_buff
   if (event && (HAL_UART_RX_FULL | HAL_UART_RX_ABOUT_FULL)){
     //Copy to Ring Buffer
+    uint16 rx_buf_len = Hal_UART_RxBufLen (BC_SCANNER_PORT);
+    uint8 tmp_buf[8],count;
+    while(rx_buf_len !=0){
+      count = HalUARTRead(BC_SCANNER_PORT, tmp_buf, 8);
+      if(count ==0){
+        //underflow;
+        break;
+      }
+      count = bufPut(&ScannerBuf,tmp_buf,count);
+      if(count ==0){
+        //buffer overflow;
+        break;
+      }
+      rx_buf_len -=count;
+    }
     //Send a Event to Handheld Task;
+    osal_set_event(HandheldApp_TaskID, HANDHELDAPP_SCANNER_EVT);
   }
 }

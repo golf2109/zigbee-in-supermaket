@@ -48,3 +48,23 @@ char* int2char(int num){
   *(ret+j) = '\0';
   return ret;
 }
+//return 0: not same, 1: same
+uint8 IsSameString(uint8 *a, uint8* b,const uint8 numBytsCompare)
+{
+  uint8 i;
+  for(i=0; i< numBytsCompare; i++)
+  {
+    if(a[i] != b[i])
+      return 0;
+  }
+  return 1;
+}
+
+void CopyString(uint8 *d, uint8* s,const uint8 numByts)
+{
+  uint8 i;
+  for(i=0; i< numByts; i++)
+  {
+    d[i] = s[i];
+  }
+}
