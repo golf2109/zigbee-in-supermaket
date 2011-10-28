@@ -450,6 +450,7 @@
           <state>$PROJ_DIR$\..\Source\Drivers</state>
           <state>$PROJ_DIR$\..\Source\Drivers\M25PEx0</state>
           <state>$PROJ_DIR$\..\Source\Drivers\Scanner</state>
+          <state>$PROJ_DIR$\..\..\Common</state>
           <state>$PROJ_DIR$\..\..\..\ZMain\TI2530DB</state>
           <state>$PROJ_DIR$\..\..\..\..\..\Components\hal\include</state>
           <state>$PROJ_DIR$\..\..\..\..\..\Components\hal\target\CC2530EB</state>
@@ -3184,11 +3185,32 @@
   </configuration>
   <group>
     <name>App</name>
+    <group>
+      <name>Drivers</name>
+      <file>
+        <name>$PROJ_DIR$\..\Source\Drivers\Scanner\BC_Scanner.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Common\buffer.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\Source\Drivers\M25PEx0\dataflash.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Common\hal_int.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\Source\scanner_handle.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\Source\Drivers\M25PEx0\Serialize.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\Source\xdata_handle.c</name>
+      </file>
+    </group>
     <file>
-      <name>$PROJ_DIR$\..\Source\Drivers\Scanner\BC_Scanner.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\Source\Drivers\M25PEx0\dataflash.c</name>
+      <name>$PROJ_DIR$\..\..\Common\common.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\Source\Handheld.c</name>
@@ -3198,9 +3220,6 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\Source\OSAL_Handheld.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\Source\Drivers\M25PEx0\Serialize.c</name>
     </file>
   </group>
   <group>

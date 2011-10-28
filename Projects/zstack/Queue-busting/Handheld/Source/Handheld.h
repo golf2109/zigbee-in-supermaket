@@ -56,24 +56,27 @@ extern "C"
 
 // These constants are only for example and should be changed to the
 // device's needs
-#define HANDHELDAPP_ENDPOINT           10
+#define HANDHELDAPP_ENDPOINT           Q_BUSTING_ENDPOINT
 
-#define HANDHELDAPP_PROFID             0x0F04
-#define HANDHELDAPP_DEVICEID           0x0001
-#define HANDHELDAPP_DEVICE_VERSION     0
-#define HANDHELDAPP_FLAGS              0
+#define HANDHELDAPP_PROFID             Q_BUSTING_PROFID
+#define HANDHELDAPP_DEVICEID           Q_BUSTING_DEVICEID
+#define HANDHELDAPP_DEVICE_VERSION     Q_BUSTING_DEVICE_VERSION
+#define HANDHELDAPP_FLAGS              Q_BUSTING_FLAGS
 
-#define HANDHELDAPP_MAX_CLUSTERS       1
-#define HANDHELDAPP_CLUSTERID          1
+#define HANDHELDAPP_MAX_CLUSTERS       Q_BUSTING_MAX_CLUSTERS
+#define HANDHELDAPP_CLUSTERID          Q_BUSTING_CLUSTERID
 
 // Send Message Timeout
-#define HANDHELDAPP_SEND_MSG_TIMEOUT   5000     // Every 5 seconds
+#define HANDHELDAPP_SEND_MSG_TIMEOUT   Q_BUSTING_CLUSTERID     // Every 5 seconds
 
 // Application Events (OSAL) - These are bit weighted definitions.
-#define HANDHELDAPP_SEND_MSG_EVT       0x0001
+#define HANDHELDAPP_SCANNER_EVT       0x0001
 
 /*********************************************************************
  * MACROS
+ */
+/*********************************************************************
+ *  EXTERNAL GLOBAL VARIABLE
  */
 
 /*********************************************************************
