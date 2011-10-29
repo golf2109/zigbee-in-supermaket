@@ -5,13 +5,7 @@
     <path>$WS_DIR$\Cashier\CC2530DB\Cashier.ewp</path>
   </project>
   <project>
-    <path>C:\Texas Instruments\ZStack-CC2530-2.5.0\Projects\zstack\Samples\Handheld\CC2530DB\Handheld.ewp</path>
-  </project>
-  <project>
-    <path>C:\Texas Instruments\ZStack-CC2530-2.5.0\Projects\zstack\Samples\SampleApp\CC2530DB\SampleApp.ewp</path>
-  </project>
-  <project>
-    <path>C:\Texas Instruments\ZStack-CC2530-2.5.0\Projects\zstack\Samples\SimpleApp\CC2530DB\SimpleApp.ewp</path>
+    <path>$WS_DIR$\Handheld\CC2530DB\Handheld.ewp</path>
   </project>
   <batchBuild/>
 </workspace>
