@@ -727,7 +727,7 @@
         </option>
         <option>
           <name>OutputFile</name>
-          <state>HandheldApp.d51</state>
+          <state>Handheld.d51</state>
         </option>
         <option>
           <name>OutputFormat</name>
@@ -925,7 +925,7 @@
         </option>
         <option>
           <name>ExtraOutputFile</name>
-          <state>HandheldApp.sim</state>
+          <state>Handheld.sim</state>
         </option>
         <option>
           <name>ExtraOutputFormat</name>
@@ -1336,11 +1336,12 @@
         </option>
         <option>
           <name>CCDefines</name>
-          <state>ZTOOL_P1</state>
-          <state>MT_TASK</state>
-          <state>MT_SYS_FUNC</state>
-          <state>MT_ZDO_FUNC</state>
-          <state>LCD_SUPPORTED=DEBUG</state>
+          <state>xZTOOL_P1</state>
+          <state>xMT_TASK</state>
+          <state>xMT_SYS_FUNC</state>
+          <state>xMT_ZDO_FUNC</state>
+          <state>LCD_SUPPORTED</state>
+          <state>HAL_UART=TRUE</state>
         </option>
         <option>
           <name>CCPreprocFile</name>
@@ -1508,6 +1509,9 @@
           <name>CCIncludePath2</name>
           <state>$PROJ_DIR$</state>
           <state>$PROJ_DIR$\..\Source</state>
+          <state>$PROJ_DIR$\..\..\Common</state>
+          <state>$PROJ_DIR$\..\Source\Drivers\M25PEx0</state>
+          <state>$PROJ_DIR$\..\Source\Drivers\Scanner</state>
           <state>$PROJ_DIR$\..\..\..\ZMain\TI2530DB</state>
           <state>$PROJ_DIR$\..\..\..\..\..\Components\hal\include</state>
           <state>$PROJ_DIR$\..\..\..\..\..\Components\hal\target\CC2530EB</state>
@@ -1785,7 +1789,7 @@
         </option>
         <option>
           <name>OutputFile</name>
-          <state>HandheldApp.d51</state>
+          <state>Handheld.d51</state>
         </option>
         <option>
           <name>OutputFormat</name>
@@ -2394,12 +2398,13 @@
         </option>
         <option>
           <name>CCDefines</name>
-          <state>NWK_AUTO_POLL</state>
-          <state>ZTOOL_P1</state>
-          <state>MT_TASK</state>
-          <state>MT_SYS_FUNC</state>
-          <state>MT_ZDO_FUNC</state>
-          <state>LCD_SUPPORTED=DEBUG</state>
+          <state>xNWK_AUTO_POLL</state>
+          <state>xZTOOL_P1</state>
+          <state>xMT_TASK</state>
+          <state>xMT_SYS_FUNC</state>
+          <state>xMT_ZDO_FUNC</state>
+          <state>LCD_SUPPORTED</state>
+          <state>HAL_UART=TRUE</state>
           <state>xPOWER_SAVING</state>
         </option>
         <option>
@@ -2568,6 +2573,9 @@
           <name>CCIncludePath2</name>
           <state>$PROJ_DIR$</state>
           <state>$PROJ_DIR$\..\Source</state>
+          <state>$PROJ_DIR$\..\..\Common</state>
+          <state>$PROJ_DIR$\..\Source\Drivers\M25PEx0</state>
+          <state>$PROJ_DIR$\..\Source\Drivers\Scanner</state>
           <state>$PROJ_DIR$\..\..\..\ZMain\TI2530DB</state>
           <state>$PROJ_DIR$\..\..\..\..\..\Components\hal\include</state>
           <state>$PROJ_DIR$\..\..\..\..\..\Components\hal\target\CC2530EB</state>
@@ -2845,7 +2853,7 @@
         </option>
         <option>
           <name>OutputFile</name>
-          <state>HandheldApp.d51</state>
+          <state>Handheld.d51</state>
         </option>
         <option>
           <name>OutputFormat</name>
@@ -3043,7 +3051,7 @@
         </option>
         <option>
           <name>ExtraOutputFile</name>
-          <state>HandheldApp.sim</state>
+          <state>Handheld.sim</state>
         </option>
         <option>
           <name>ExtraOutputFormat</name>
