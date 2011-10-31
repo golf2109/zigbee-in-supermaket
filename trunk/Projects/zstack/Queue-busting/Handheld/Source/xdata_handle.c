@@ -54,7 +54,7 @@ Basket* ReadBasket(uint8 *pID)
 {
   ST_uint32  addr = FindBasket(pID);
   if(addr){
-    FlashRead((ST_uint32)addr,(ST_uint8*)(tmpMember.data.prods_id),
+    FlashRead((ST_uint32)addr+1+2+BASKET_ID_LEN,(ST_uint8*)(tmpMember.data.prods_id),
               (tmpMember.data.len)*(tmpMember.data.offset));
     return &tmpMember.data;
   }else
@@ -89,6 +89,7 @@ uint8 WriteBasket(Basket *pBasket)
       break;
     i++;
   }
+  addr=(ST_uint32)(START_ADDRESS+FLASH_HEADER_SIZE+InfoBaskets.size*i);
   //Write Basket to flash
   FlashWrite(addr,"&",1);
   FlashWrite(addr+1,(uint8*)pBasket,(pBasket->len)*(pBasket->offset)+BASKET_ID_LEN+2);
