@@ -20,7 +20,8 @@
 /*USER CODE*/
 #include "../common.h"
 #include "cashier.h"
-#include "buffer.h"
+#include "list.h"
+#include "uart.h"
 
 /*********************************************************************
  * ADDRESS
@@ -29,66 +30,7 @@ afAddrType_t BrdAddr;	//broadcast addr
 afAddrType_t DesAddr;	//destination addr
 afAddrType_t SrcAddr;	//source addr
 
-/*********************************************************************
- * BARCODE SCANNER
- */
- ringBuf_t basket_buff;
-/*********************************************************************
- * @brief   Initialization UART use for receive data from barcode scanner
- *
- * @param   0 or 1
- *
- * @return  none
- */
-void UART_Init( uint8 port ){
- 
-  
-  halUARTCfg_t uartConfig;
-  
-  bufInit(&basket_buff);
-    
-  uartConfig.configured           = TRUE;
-  uartConfig.baudRate             = UART_SCANNER_BAUD;
-  uartConfig.flowControl          = TRUE;
-  uartConfig.flowControlThreshold = UART_SCANNER_THRESH;
-  uartConfig.rx.maxBufSize        = UART_SCANNER_RX_SIZE;
-  uartConfig.tx.maxBufSize        = UART_SCANNER_TX_SIZE;
-  uartConfig.idleTimeout          = UART_SCANNER_TIMEOUT;
-  uartConfig.intEnable            = TRUE;
-  uartConfig.callBackFunc         = UART_SCANNER_process_evt;
-  if(!port)
-	HalUARTOpen (HAL_UART_PORT_0, &uartConfig);
-  else
-	HalUARTOpen (HAL_UART_PORT_1, &uartConfig);
-}
-
-/*********************************************************************
- * @brief   read every basket_id from rx_buff and put it to ringBuf_t
- *
- * @param   none
- *
- * @return  none
- */
-static void read_scanner(void){
-  uint8 tmp_buf[BASKET_ID_LEN];
-  HalUARTRead(UART_SCANNER_PORT, tmp_buf, BASKET_ID_LEN);
-  bufPut(&basket_buff,tmp_buf,BASKET_ID_LEN);
-}
-
-/*********************************************************************
- * @brief   Show basket_id to LCD
- *
- * @param   none
- *
- * @return  none
- */
-/*static void UART_SCANNER_print(){
-  uint8 tmp[BASKET_ID_LEN];
-  bufGet(&basket_buff, tmp, BASKET_ID_LEN);
-  printText((char*)tmp,3);
-}*/
-
-
+uint8 ready_to_bcast;   //take role as signal
 /*********************************************************************
  * @brief   Check if it is basket_id format
  *
@@ -97,9 +39,7 @@ static void read_scanner(void){
  * @return  TRUE if it's basket id
  */
 static bool Check_basket_id_format(char* id){
-  if(osal_strlen(id) != BASKET_ID_LEN) return FALSE;
-  //basket_id must begin with an alphabetic
-  if(((*id)>=65 && (*id)<=90) || ((*id)>=97 && (*id)<=122)) return TRUE;
+  if(*(id)=='#')  return TRUE;
   else return FALSE;
 }
 
@@ -113,32 +53,6 @@ static bool Check_basket_id_format(char* id){
 static bool Check_basket_id(char* id){
   if(*(id)=='#')  return TRUE;
   else return FALSE;
-}
-
-/*********************************************************************
- * @brief   Process all event form UART that connect to barcode scannner
- *
- * @param   - port of the UART
- *          - event code
- *
- * @return  none
- */
-static void UART_SCANNER_process_evt(uint8 port, uint8 event){
-  //if rx_buffer have data, read it and push to basket_buff
-  if (event && (HAL_UART_RX_FULL | HAL_UART_RX_ABOUT_FULL)){
-    uint16 rx_buf_len = Hal_UART_RxBufLen (UART_SCANNER_PORT);
-    uint8 num_basketId = (rx_buf_len/BASKET_ID_LEN)+1,i;
-    for(i=0;i<num_basketId;i++)
-      read_scanner();
-    //check if basket_id format, if true broadcast it
-    uint8 tmp[BASKET_ID_LEN];
-    bufGet(&basket_buff, tmp, BASKET_ID_LEN);
-    if(Check_basket_id_format((char*)tmp)==TRUE){
-      SendMessage(BrdAddr,(char*)tmp);
-    }
-    printText("Request for basket",2);
-    printText((char*)tmp,3);
-  }
 }
 
  /*********************************************************************
@@ -192,7 +106,8 @@ void cashier_Init( byte task_id ){
   Cashier_TransID = 0;
 
   //Set up for UART
-  UART_Init(UART_SCANNER_PORT);
+  UART_PC_Init();
+  UART_Scanner_Init();
   
   // Setup for the destination address - Group 1
   BrdAddr.addrMode = (afAddrMode_t)AddrBroadcast;
@@ -214,6 +129,10 @@ void cashier_Init( byte task_id ){
   
   ZDO_RegisterForZDOMsg( Cashier_TaskID, End_Device_Bind_rsp );
   ZDO_RegisterForZDOMsg( Cashier_TaskID, Match_Desc_rsp );
+  
+  //Ready to Work
+  ready_to_bcast = 1;
+  HalLedSet ( HAL_LED_1, HAL_LED_MODE_ON );
 }
 
 /*********************************************************************
@@ -237,9 +156,42 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
   ZStatus_t sentStatus;
   byte sentTransID;       // This should match the value sent
   (void)task_id;  // Intentionally unreferenced parameter
-
-  if ( events & SYS_EVENT_MSG ){ 
   
+  if(events == UART_SCANNER_EVENT){
+    uint8 len;
+    uint8 _tmp[16];
+    char tmp[16];
+    basket_buff = bufPop(basket_buff, _tmp, &len);
+    osal_memcpy(tmp,_tmp,16);
+    if(ready_to_bcast){
+      SendMessage(BrdAddr, tmp);
+      ready_to_bcast = 0;
+    }
+    HalUARTWrite(UART_PC_PORT, (char*)tmp, len);
+  }
+  else if(events == UART_PC_EVENT){
+    //Data transfer from computer stor in pc_buff
+    uint8 len;
+    uint8 _tmp[16];
+    char tmp[16];
+    pc_buff = bufPop(pc_buff, _tmp, &len);
+    osal_memcpy(tmp,_tmp,16);
+    if(ready_to_bcast && Check_basket_id_format(tmp)){
+      SendMessage(BrdAddr, tmp);
+      ready_to_bcast = 0;
+    }
+    HalUARTWrite(UART_PC_PORT, (char*)tmp, len);
+
+    //check if basket_buff is have data
+    //uint8 have_data = bufCount(basket_buff);
+    //osal_set_event(Cashier_TaskID, UART_SCANNER_EVENT);
+    uint8 have_data = bufCount(pc_buff);
+    if(have_data>0)
+      osal_set_event(Cashier_TaskID, UART_PC_EVENT);
+  }
+
+  else if ( events & SYS_EVENT_MSG ){
+      
     MSGpkt = (afIncomingMSGPacket_t *)osal_msg_receive( task_id );
     while ( MSGpkt ){
 	
@@ -267,13 +219,31 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
           break;
 
         case AF_INCOMING_MSG_CMD: // Incoming MSG type message
-          //if i have this basket_id
-          if(Check_basket_id((char*)MSGpkt->cmd.Data)==TRUE){
-            DesAddr = MSGpkt->srcAddr;
-            SendMessage(DesAddr,"Here is your basket");
-          }
           //print data of this message for debug
           printText((char*)MSGpkt->cmd.Data,3);
+#ifdef  CLIENT
+          //if i have this basket_id
+          HalLedSet ( HAL_LED_3, HAL_LED_MODE_ON );
+          if(Check_basket_id((char*)MSGpkt->cmd.Data)==TRUE){
+            char* prod = "123456789 123456789 123456789 ";
+            DesAddr = MSGpkt->srcAddr;
+            //SendMessage(DesAddr,(char*)MSGpkt->cmd.Data);
+            SendMessage(DesAddr,prod);
+          }
+          HalLedSet ( HAL_LED_3, HAL_LED_MODE_OFF );
+#endif
+#ifdef  CASHIER
+          /*if(Check_basket_id_format((char*)MSGpkt->cmd.Data)==TRUE)
+            start_receive_prods = 1;
+          if(start_receive_prods){
+            HalUARTWrite(UART_PC_PORT, MSGpkt->cmd.Data, MSGpkt->cmd.DataLength);
+          }*/
+          unsigned char tmp[80];
+          osal_memset(tmp,0,80);
+          osal_memcpy(tmp,MSGpkt->cmd.Data,MSGpkt->cmd.DataLength);
+          HalUARTWrite(UART_PC_PORT, tmp, MSGpkt->cmd.DataLength);
+          ready_to_bcast = 1;
+#endif
           break;
 
         case ZDO_STATE_CHANGE: // ZDO has changed the device's network state
@@ -377,7 +347,7 @@ void SendMessage(afAddrType_t dstAddr, char* message){
   char theMessageData[80];
   osal_memcpy(theMessageData,message,osal_strlen(message));
   if ( AF_DataRequest( &dstAddr, &epDesc, CLUSTERID,
-                       (byte)osal_strlen( theMessageData ) + 1,
+                       (byte)(osal_strlen( theMessageData ) + 1),
                        (byte *)&theMessageData,
                        &Cashier_TransID,
                        AF_DISCV_ROUTE, AF_DEFAULT_RADIUS ) == afStatus_SUCCESS )
