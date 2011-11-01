@@ -21,10 +21,10 @@ public class WriteFile {
 	private WritableCellFormat timesBoldUnderline;
 	private WritableCellFormat times;
 	private String inputFile;
-	String Label1[] = { "IDProduct", "NameProduct", "PRICE" };
+	String Label1[] = { "Index", "IDProduct", "NameProduct", "PRICE" };
 	String Label2[] = { "IDCustommer", "IDProduct" };
 
-	public void writeExcel(String Path, int column, int type)
+	public void writeExcel(String Path, String[] Data, int length)
 			throws IOException, WriteException {
 		File file = new File(Path);
 		// Workbook workbook = application.createWorkbook("Custom title");
@@ -35,15 +35,14 @@ public class WriteFile {
 		WritableWorkbook workbook = Workbook.createWorkbook(file, wbSettings);
 		workbook.createSheet("List", 0);// first create sheet
 		WritableSheet excelSheet = workbook.getSheet(0);
-		createLabel(excelSheet, column, type);
-		createContent(excelSheet, column, type);
+		createLabel(Path,excelSheet);
+		createContent(excelSheet, Data, length);
 
 		workbook.write();
 		workbook.close();
 	}
 
-	private void createLabel(WritableSheet sheet, int column, int type)
-			throws WriteException {
+	private void createLabel(String Path,WritableSheet sheet) throws WriteException {
 		// Lets create a times font
 		WritableFont times10pt = new WritableFont(WritableFont.TIMES, 10);
 		// Define the cell format
@@ -65,51 +64,33 @@ public class WriteFile {
 		cv.setAutosize(true);
 		// Write a few headers
 		int i;
-		String label[] = new String[10];
-		switch (type) {
-		case 1:// list of product
-			for (i = 0; i < Label1.length; i++) {
-				label[i] = Label1[i];
-			}
-
-		case 2:// list of custommer
-			for (i = 0; i < Label2.length; i++) {
-				label[i] = Label2[i];
-			}
-		case 3:// list of product of each custommer
-		}
-
-		for (i = 0; i < column; i++) {
-			addCaption(sheet, i, 0, label[i]);
+		addCaption(sheet, 0, 0, Path.substring(8,Path.length()-4));
+		for (i = 0; i < 4; i++) {
+			addCaption(sheet, i, 1, Label1[i]);
 		}
 	}
 
-	private void createContent(WritableSheet sheet, int column, int type)
+	private void createContent(WritableSheet sheet, String[] Data, int length)
 			throws WriteException, RowsExceededException {
-		String name = "Product ";
-
-		switch (type) {
-		case 1:// list of product
-			for (int i = 1; i < 10; i++) {
-				// First column
-				addNumber(sheet, 0, i, i + 100);
-				// Second column
-				addLabel(sheet, 1, i, name);
-				// Thrid column
-				addNumber(sheet, 2, i, i + 10);
+		int col;
+		int row = 2;
+		int i=1;
+		int total=0;
+		String Temp;
+		while (i < length-1) {
+			addNumber(sheet, 0, row, row-1);
+			for (col = 1; col <= 3; col++) {
+				addLabel(sheet, col, row, Data[i]);
+				if(col==3&&Data[i]!=null)
+				total+=Integer.parseInt(Data[i]);
+				i++;
 			}
-			// //
-
-		case 2:// list of custommer
-			for (int i = 1; i < 10; i++) {
-				// First column
-				addNumber(sheet, 0, i, i + 100);
-				// Second column
-				addNumber(sheet, 1, i, i);
-			}
-			// //
-		case 3:// list of product of each custommer
+			row++;
+			col = 0;
 		}
+		addLabel(sheet, 0, row+1, "Total");
+		addLabel(sheet, 2, row+1, (row-2)+" Product");
+		addNumber(sheet, 3, row+1, total);
 
 		// StringBuffer buf = new StringBuffer();
 		// buf.append("SUM(A2:A10)");
