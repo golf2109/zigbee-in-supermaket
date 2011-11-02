@@ -30,7 +30,10 @@ afAddrType_t BrdAddr;	//broadcast addr
 afAddrType_t DesAddr;	//destination addr
 afAddrType_t SrcAddr;	//source addr
 
-uint8 ready_to_bcast;   //take role as signal
+volatile uint8 have_basket;   //take role as signal
+volatile uint8 have_pccmd;   //take role as signal
+volatile uint8 ready_bcast;   //take role as signal
+uint8* basket_id_sent;
 /*********************************************************************
  * @brief   Check if it is basket_id format
  *
@@ -130,9 +133,16 @@ void cashier_Init( byte task_id ){
   ZDO_RegisterForZDOMsg( Cashier_TaskID, End_Device_Bind_rsp );
   ZDO_RegisterForZDOMsg( Cashier_TaskID, Match_Desc_rsp );
   
-  //Ready to Work
-  ready_to_bcast = 1;
+  // Ready to Work
   HalLedSet ( HAL_LED_1, HAL_LED_MODE_ON );
+  
+  // create user buffer for use
+  basket_id_sent = osal_mem_alloc(sizeof(uint8)*(BASKET_ID_LEN+PC_CMD_LEN));
+  // Start timer 
+  /*have_basket = 0;
+  have_pccmd = 0;
+  ready_bcast = 0;
+  osal_start_reload_timer(Cashier_TaskID, TIMER_EVENT, TIMER_TIME_OUT );*/
 }
 
 /*********************************************************************
@@ -156,33 +166,42 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
   ZStatus_t sentStatus;
   byte sentTransID;       // This should match the value sent
   (void)task_id;  // Intentionally unreferenced parameter
+  uint8 len = 0,i=0;
   
-  if(events == UART_SCANNER_EVENT){
-    uint8 len;
-    uint8 tmp[BASKET_ID_LEN+1];
-    basket_buff = bufPop(basket_buff, tmp, &len);
-    tmp[BASKET_ID_LEN] = 0x0d;
-      
-    if(ready_to_bcast && Check_basket_id_format((char*)tmp)){
-      SendMessage(BrdAddr, (char*)tmp);
-      ready_to_bcast = 0;
-      HalUARTWrite(UART_PC_PORT, tmp, BASKET_ID_LEN+1);
-    }
+  switch(events){
+    case TIMER_EVENT:
+      break;
+    case UART_SCANNER_EVENT:
+        HalLedSet ( HAL_LED_4, HAL_LED_MODE_ON );
+        basket_buff = bufPop(basket_buff, basket_id_sent, &len);
+        *(basket_id_sent+BASKET_ID_LEN+1) = 0x0d;
+        
+        if(Check_basket_id_format((char*)basket_id_sent)){
+          i = len;
+          while(i){
+            *(basket_id_sent+i) = *(basket_id_sent+i-1);
+            i=i-1;
+          }
+          *(basket_id_sent) = REQUEST_BASKET;
+          SendMessage(BrdAddr, (char*)basket_id_sent);
+          HalUARTWrite(UART_PC_PORT, basket_id_sent, BASKET_ID_LEN+1);
+        }
+        break;
+    case UART_PC_EVENT:
+      HalLedSet ( HAL_LED_4, HAL_LED_MODE_ON );
+      pc_buff = bufPop(pc_buff, basket_id_sent, &len);
+      *(basket_id_sent+BASKET_ID_LEN) = 0x0d;
+  
+      if(Check_pc_cmd_format((char*)basket_id_sent)){
+        SendMessage(BrdAddr, (char*)basket_id_sent);
+        HalUARTWrite(UART_PC_PORT, basket_id_sent, PC_CMD_LEN+1);
+      }
+      break;
+    default:
+      break;
   }
-  else if(events == UART_PC_EVENT){
-    //Data transfer from computer stor in pc_buff
-    uint8 len;
-    uint8 tmp[PC_CMD_LEN+1];
-    pc_buff = bufPop(pc_buff, tmp, &len);
-    tmp[BASKET_ID_LEN] = 0x0d;
-
-    if(ready_to_bcast && Check_pc_cmd_format((char*)tmp)){
-      SendMessage(BrdAddr, (char*)tmp);
-      HalUARTWrite(UART_PC_PORT, tmp, PC_CMD_LEN+1);
-    }
-  }
-
-  else if ( events & SYS_EVENT_MSG ){
+  
+  if ( events & SYS_EVENT_MSG ){
       
     MSGpkt = (afIncomingMSGPacket_t *)osal_msg_receive( task_id );
     while ( MSGpkt ){
@@ -219,22 +238,16 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
           if(Check_basket_id((char*)MSGpkt->cmd.Data)==TRUE){
             char* prod = "123456789 123456789 123456789 ";
             DesAddr = MSGpkt->srcAddr;
-            //SendMessage(DesAddr,(char*)MSGpkt->cmd.Data);
             SendMessage(DesAddr,prod);
           }
           HalLedSet ( HAL_LED_3, HAL_LED_MODE_OFF );
 #endif
 #ifdef  CASHIER
-          /*if(Check_basket_id_format((char*)MSGpkt->cmd.Data)==TRUE)
-            start_receive_prods = 1;
-          if(start_receive_prods){
-            HalUARTWrite(UART_PC_PORT, MSGpkt->cmd.Data, MSGpkt->cmd.DataLength);
-          }*/
-          unsigned char tmp[80];
-          osal_memset(tmp,0,80);
-          osal_memcpy(tmp,MSGpkt->cmd.Data,MSGpkt->cmd.DataLength);
-          HalUARTWrite(UART_PC_PORT, tmp, MSGpkt->cmd.DataLength);
-          ready_to_bcast = 1;
+          HalUARTWrite(UART_PC_PORT, MSGpkt->cmd.Data, MSGpkt->cmd.DataLength);
+          DesAddr = MSGpkt->srcAddr;
+          *(basket_id_sent) = DEL_BASKET;
+          SendMessage(DesAddr,(char*)basket_id_sent);
+          HalLedSet ( HAL_LED_4, HAL_LED_MODE_OFF );
 #endif
           break;
 
@@ -264,13 +277,6 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
     // return unprocessed events
     return (events ^ SYS_EVENT_MSG);
   }
-  //check if basket_buff is have data
-  uint8 have_data = bufCount(basket_buff);
-  if(have_data>0)
-    osal_set_event(Cashier_TaskID, UART_SCANNER_EVENT);
-  have_data = bufCount(pc_buff);
-  if(have_data>0)
-    osal_set_event(Cashier_TaskID, UART_PC_EVENT);
   return 0;
 }
 
