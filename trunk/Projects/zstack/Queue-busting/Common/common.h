@@ -6,18 +6,24 @@
 /*********************************************************************
  * DATA FOR BASKET
  */
+
 #define MAX_PRODS		25		//max products in one basket
 #define PRODS_ID_LEN		13		//len of product_id
 #define BASKET_ID_LEN		8		//BASKET_ID_FORMAT +7
 #define BASKET_ID_FORMAT        '#'
-
+#define PRODS_NUM_SIZE          1
+/*
+*
+*/
 typedef struct Product{
   uint8 id[PRODS_ID_LEN];
   uint8  num;
 }Product;
-
+/*
+*
+*/
 typedef struct {
-	char basket_id[BASKET_ID_LEN];
+	char id[BASKET_ID_LEN];
 	uint8 len;
 	Product prods[MAX_PRODS];
 }Basket;
@@ -35,11 +41,14 @@ typedef struct {
 /*********************************************************************
  * CODE
  */
-#define REQUEST_BASKET			'^'	//request for basket_id
+
+#define REQUEST_BASKET			'%'	//request for basket_id
 #define DEL_BASKET			'^'	//del basket_id
 #define ADD_PRODS_CODE			'&'	//add product to basket
 #define DEL_PRODS_CODE			'*'	//del product out of basket
 #define CHANGE_PRODS_LABEL		'@'	//change lable for data
+#define ALL_BASKET                       "all"
+
 
 
 /*********************************************************************

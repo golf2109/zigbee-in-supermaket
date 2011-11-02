@@ -48,15 +48,19 @@ void BC_Scanner_CallBack(uint8 port, uint8 event){
   if (event && (HAL_UART_RX_FULL | HAL_UART_RX_ABOUT_FULL)){
     //Copy to Ring Buffer
     uint16 rx_buf_len = Hal_UART_RxBufLen (BC_SCANNER_PORT);
-    uint8 tmp_buf[24],count;
+    uint8 tmp_buf[8],count;
     while(rx_buf_len !=0){
       count = HalUARTRead(BC_SCANNER_PORT, tmp_buf, 8);
       if(count ==0){
         //underflow;
         break;
       }
-      if(rx_buf_len <= 8)
+      if(rx_buf_len <= 8 && tmp_buf[count-1]==0x0d)
+      {
         tmp_buf[count-1]=0;
+        //Send a Event to Handheld Task;
+        osal_set_event(HandheldApp_TaskID, 1);
+      }
       count = bufPut(&ScannerBuf,tmp_buf,count);
       if(count ==0){
         //buffer overflow;
@@ -65,7 +69,6 @@ void BC_Scanner_CallBack(uint8 port, uint8 event){
       rx_buf_len -=count;
     }
     printText((char*)tmp_buf,3);
-    //Send a Event to Handheld Task;
-    osal_set_event(HandheldApp_TaskID, 1);
+    
   }
 }

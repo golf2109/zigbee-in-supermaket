@@ -26,7 +26,7 @@ static uint8 getString(ringBuf_t *pBuf, uint8 *output, const uint8 max_length)
 * return 1: true, 0: false
 */
 static uint8 IsBasketID(uint8 *input, const uint8 length){
-  if(input[0] == BASKET_ID_SIGN && length == BASKET_ID_LEN)
+  if(input[0] == BASKET_ID_FORMAT && length == BASKET_ID_LEN)
     return 1;
   else
     return 0;
@@ -35,7 +35,7 @@ static uint8 IsBasketID(uint8 *input, const uint8 length){
 * return 1: true, 0: false
 */
 static uint8 IsProductID(uint8 *input, const uint8 length){
-  if(input[0] != BASKET_ID_SIGN && length <= PROD_ID_MAX_LEN && length >= PROD_ID_MIN_LEN)
+  if(input[0] != BASKET_ID_FORMAT && length == PRODS_ID_LEN)
     return 1;
   else
     return 0;
@@ -49,9 +49,9 @@ static Product* FindProductInBasket(uint8 *prodID,const uint8 length,Basket * ba
   Product* pProduct = NULL;
   uint8 i;
   for(i=0;i<basket->len;i++)
-    if(IsSameString(prodID,(uint8*)(basket->prods_id+(basket->offset)*i),length))
+    if(IsSameString(prodID,(uint8*)(basket->prods[i].id),PRODS_ID_LEN))
     {
-      pProduct = (Product*)(basket->prods_id+(basket->offset)*i);
+      pProduct = (Product*)(&basket->prods[i]);
       return pProduct;
     }
   return NULL;
@@ -61,17 +61,16 @@ static Product* FindProductInBasket(uint8 *prodID,const uint8 length,Basket * ba
 static Basket  CurrentBasket;
 static Product *CurrentProduct;
 
-static void NewBasket(Basket *a, uint8 * id, const uint8 length)
+static void NewBasket(Basket *a, uint8 * id)
 {
   //Clear Current Basket ID
-  CopyString((uint8*)a->basket_id,id,length);
+  CopyString((uint8*)a->id,id,BASKET_ID_LEN);
   //Clear len
   a->len =0;
-  a->offset = OFFSET;
 }
 void ScannerHandleInit(void)
 {
-  NewBasket(&CurrentBasket,BASKET_ID_NULL,BASKET_ID_LEN);
+  NewBasket(&CurrentBasket,BASKET_ID_NULL);
   CurrentProduct = NULL;
 }
 
@@ -85,7 +84,7 @@ void ScannerHandleInput(ringBuf_t *pBuf)
     if(IsBasketID(tmp,count))
     {
       //Basket ID is not null
-      if(IsSameString((uint8*)(CurrentBasket.basket_id),BASKET_ID_NULL,BASKET_ID_LEN)==0)
+      if(IsSameString((uint8*)(CurrentBasket.id),BASKET_ID_NULL,BASKET_ID_LEN)==0)
       {
         if(CurrentBasket.len > 0)
         {
@@ -93,22 +92,22 @@ void ScannerHandleInput(ringBuf_t *pBuf)
           WriteBasket(&CurrentBasket);
           ;
         }
-        if(IsSameString((uint8*)(CurrentBasket.basket_id),tmp,BASKET_ID_LEN))
+        if(IsSameString((uint8*)(CurrentBasket.id),tmp,BASKET_ID_LEN))
         { 
           //Close Basket
-          NewBasket(&CurrentBasket,BASKET_ID_NULL,BASKET_ID_LEN);
+          NewBasket(&CurrentBasket,BASKET_ID_NULL);
           //Signal to User: turn off LED
           HalLedSet( HAL_LED_4, HAL_LED_MODE_OFF );
         }else{
           //New Basket;
-          NewBasket(&CurrentBasket,tmp,BASKET_ID_LEN);
+          NewBasket(&CurrentBasket,tmp);
           // Signal to User: turn on LED
           HalLedSet( HAL_LED_4, HAL_LED_MODE_ON );
         }
       }else//null
       {
         //New Basket;
-        NewBasket(&CurrentBasket,tmp,BASKET_ID_LEN);
+        NewBasket(&CurrentBasket,tmp);
         // Signal to User: turn on LED
         HalLedSet( HAL_LED_4, HAL_LED_MODE_ON );
       }
@@ -116,7 +115,7 @@ void ScannerHandleInput(ringBuf_t *pBuf)
     else if(IsProductID(tmp, count))
     {
       //Basket is opened
-      if(IsSameString((uint8*)(CurrentBasket.basket_id),BASKET_ID_NULL,BASKET_ID_LEN)==0)
+      if(IsSameString((uint8*)(CurrentBasket.id),BASKET_ID_NULL,BASKET_ID_LEN)==0)
       {
         CurrentProduct=FindProductInBasket(tmp,count,&CurrentBasket);
         if(CurrentProduct!=NULL)//Exist Product in Current Basket
@@ -124,7 +123,7 @@ void ScannerHandleInput(ringBuf_t *pBuf)
           CurrentProduct->num++;
         }else//New Product in Current Basket
         {
-          CurrentProduct=(Product*)(CurrentBasket.prods_id+(CurrentBasket.offset)*(CurrentBasket.len));
+          CurrentProduct=(Product*)(&CurrentBasket.prods[CurrentBasket.len]);
           CopyString(CurrentProduct->id,tmp,PRODS_ID_LEN);
           CurrentProduct->num=1;
           CurrentBasket.len++;
@@ -137,7 +136,7 @@ void ScannerHandleInput(ringBuf_t *pBuf)
     }else if(IsSameString("@FlashRead",tmp,10)){
       //test
       Basket *pBasket;
-      pBasket =ReadBasket("#1234567");
+      pBasket =ReadBasket("#1234567890123");
     }else{
       //Drope
     }

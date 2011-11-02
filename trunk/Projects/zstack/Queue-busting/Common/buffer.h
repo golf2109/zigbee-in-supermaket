@@ -10,7 +10,7 @@
 * CONSTANTS AND DEFINES
 */
 #ifndef BUF_SIZE
-#define BUF_SIZE	64
+#define BUF_SIZE	32
 #endif
 
 #if (BUF_SIZE > 256)

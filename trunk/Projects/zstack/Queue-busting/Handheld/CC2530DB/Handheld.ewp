@@ -2353,7 +2353,7 @@
         </option>
         <option>
           <name>General Far22 Heap Size</name>
-          <state>0xFFF</state>
+          <state>0x7FF</state>
         </option>
         <option>
           <name>GeneralMisraVer</name>

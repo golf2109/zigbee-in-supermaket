@@ -279,7 +279,7 @@ UINT16 HandheldApp_ProcessEvent( byte task_id, UINT16 events )
             // The data wasn't delivered -- Do something
           }else{
             //========Erase Basket========
-            EraseBasket(sentBasketID);
+            //EraseBasket(sentBasketID);
           }
           break;
 
@@ -288,16 +288,17 @@ UINT16 HandheldApp_ProcessEvent( byte task_id, UINT16 events )
           break;
 
         case ZDO_STATE_CHANGE:
-          /*HandheldApp_NwkState = (devStates_t)(MSGpkt->hdr.status);
+          HandheldApp_NwkState = (devStates_t)(MSGpkt->hdr.status);
           if ( (HandheldApp_NwkState == DEV_ZB_COORD)
               || (HandheldApp_NwkState == DEV_ROUTER)
               || (HandheldApp_NwkState == DEV_END_DEVICE) )
           {
             // Start sending "the" message in a regular interval.
-            osal_start_timerEx( HandheldApp_TaskID,
-                                HANDHELDAPP_SEND_MSG_EVT,
-                                HANDHELDAPP_SEND_MSG_TIMEOUT );
-          }*/
+            //osal_start_timerEx( HandheldApp_TaskID,
+            //                    HANDHELDAPP_SEND_MSG_EVT,
+             //                   HANDHELDAPP_SEND_MSG_TIMEOUT );
+          }else if(HandheldApp_NwkState== DEV_NWK_ORPHAN)
+             printText("Disconnect",11);
           break;
 
         default:
@@ -497,11 +498,11 @@ void HandheldApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
       if(pBasket)
       {
         if ( AF_DataRequest( &pkt->srcAddr, &HandheldApp_epDesc,
-                       HANDHELDAPP_CLUSTERID,
-                       (pBasket->len)*(pBasket->offset)+2+BASKET_ID_LEN,
+                       HANDHELDAPP_CLUSTERID,BASKET_ID_LEN+PRODS_NUM_SIZE+
+                       (pBasket->len)*(sizeof(Product)),
                        (byte *)pBasket,
                        &HandheldApp_TransID,
-                       AF_DISCV_ROUTE, AF_DEFAULT_RADIUS ) == afStatus_SUCCESS )
+                       AF_DISCV_ROUTE|AF_ACK_REQUEST, AF_DEFAULT_RADIUS ) == afStatus_SUCCESS )
         {
           // Successfully requested to be sent.
         }
@@ -509,7 +510,7 @@ void HandheldApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
         {
           // Error occurred in request to send.
         }
-        CopyString(sentBasketID, (uint8*)pBasket->basket_id,BASKET_ID_LEN);
+        CopyString(sentBasketID, (uint8*)pBasket->id,BASKET_ID_LEN);
       }
       // "the" message
 #if defined( LCD_SUPPORTED )
