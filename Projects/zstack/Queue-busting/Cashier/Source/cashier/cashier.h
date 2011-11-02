@@ -5,15 +5,19 @@
 #include <AF.h>
 #include "list.h"
 
+#define TIMER_EVENT       0x0003
+#define TIMER_TIME_OUT    1000  //miliseconds
+
 /*********************************************************************
  *   GLOBAL VARIABLES
  */
-
 extern byte Cashier_TaskID;
 extern uint8 __xdata ScannerRxBuffer[20]; 
 extern uint8 __xdata ScannerRxIndex; 
-extern uint8 ready_to_bcast;
-
+extern volatile uint8 have_basket;
+extern volatile uint8 have_pccmd;
+extern volatile uint8 ready_bcast;
+extern uint8* basket_id_sent;
 /*********************************************************************
  *   FUNCTION
  */

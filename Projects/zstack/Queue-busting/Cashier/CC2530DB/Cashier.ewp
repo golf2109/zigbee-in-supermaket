@@ -278,9 +278,8 @@
           <state>MT_TASK</state>
           <state>MT_SYS_FUNC</state>
           <state>MT_ZDO_FUNC</state>
-          <state>LCD_SUPPORTED=DEBUG</state>
           <state>HAL_UART=TRUE</state>
-          <state>SERIAL_APP_PORT=0</state>
+          <state>CASHIER</state>
         </option>
         <option>
           <name>CCPreprocFile</name>
