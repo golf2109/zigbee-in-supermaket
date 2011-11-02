@@ -23,7 +23,7 @@
   #include "aps_frag.h"
 #endif
 
-#include "../common.h"
+#include "common.h"
 #include "cashier.h"
 
 /*********************************************************************

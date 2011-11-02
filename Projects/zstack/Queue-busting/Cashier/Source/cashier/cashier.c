@@ -18,7 +18,7 @@
 #include "hal_uart.h"
 
 /*USER CODE*/
-#include "../common.h"
+#include "common.h"
 #include "cashier.h"
 #include "list.h"
 #include "uart.h"
@@ -39,19 +39,19 @@ uint8 ready_to_bcast;   //take role as signal
  * @return  TRUE if it's basket id
  */
 static bool Check_basket_id_format(char* id){
-  if(*(id)=='#')  return TRUE;
+  if(*(id) == BASKET_ID_FORMAT)  return TRUE;
   else return FALSE;
 }
 
 /*********************************************************************
- * @brief   Check if this device have this basket_id
+ * @brief   Check if it is basket_id format
  *
  * @param   basket_id
  *
- * @return  TRUE if have
+ * @return  TRUE if it's basket id
  */
-static bool Check_basket_id(char* id){
-  if(*(id)=='#')  return TRUE;
+static bool Check_pc_cmd_format(char* id){
+  if(*(id) == PC_CMD_FORMAT)  return TRUE;
   else return FALSE;
 }
 
@@ -67,21 +67,21 @@ devStates_t Cashier_NwkState;
 byte Cashier_TaskID;
 byte Cashier_TransID;
 
-const cId_t ClusterList[MAX_CLUSTERS] = {
+const cId_t ClusterList[Q_BUSTING_MAX_CLUSTERS] = {
 
-  CLUSTERID
+  Q_BUSTING_CLUSTERID
 };
 
 const SimpleDescriptionFormat_t SimpleDesc = {
 
-  ENDPOINT,              //  int Endpoint;
-  PROFID,                //  uint16 AppProfId[2];
-  DEVICEID,              //  uint16 AppDeviceId[2];
-  DEVICE_VERSION,        //  int   AppDevVer:4;
-  FLAGS,                 //  int   AppFlags:4;
-  MAX_CLUSTERS,          //  byte  AppNumInClusters;
+  Q_BUSTING_ENDPOINT,              //  int Endpoint;
+  Q_BUSTING_PROFID,                //  uint16 AppProfId[2];
+  Q_BUSTING_DEVICEID,              //  uint16 AppDeviceId[2];
+  Q_BUSTING_DEVICE_VERSION,        //  int   AppDevVer:4;
+  Q_BUSTING_FLAGS,                 //  int   AppFlags:4;
+  Q_BUSTING_MAX_CLUSTERS,          //  byte  AppNumInClusters;
   (cId_t *)ClusterList,  //  byte *pAppInClusterList;
-  MAX_CLUSTERS,          //  byte  AppNumInClusters;
+  Q_BUSTING_MAX_CLUSTERS,          //  byte  AppNumInClusters;
   (cId_t *)ClusterList   //  byte *pAppInClusterList;
 };
 
@@ -111,11 +111,11 @@ void cashier_Init( byte task_id ){
   
   // Setup for the destination address - Group 1
   BrdAddr.addrMode = (afAddrMode_t)AddrBroadcast;
-  BrdAddr.endPoint = ENDPOINT;
+  BrdAddr.endPoint = Q_BUSTING_ENDPOINT;
   BrdAddr.addr.shortAddr = 0xffff;
   
   // Fill out the endpoint description.
-  epDesc.endPoint = ENDPOINT;
+  epDesc.endPoint = Q_BUSTING_ENDPOINT;
   epDesc.task_id = &Cashier_TaskID;
   epDesc.simpleDesc
             = (SimpleDescriptionFormat_t *)&SimpleDesc;
@@ -159,35 +159,27 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
   
   if(events == UART_SCANNER_EVENT){
     uint8 len;
-    uint8 _tmp[16];
-    char tmp[16];
-    basket_buff = bufPop(basket_buff, _tmp, &len);
-    osal_memcpy(tmp,_tmp,16);
-    if(ready_to_bcast){
-      SendMessage(BrdAddr, tmp);
+    uint8 tmp[BASKET_ID_LEN+1];
+    basket_buff = bufPop(basket_buff, tmp, &len);
+    tmp[BASKET_ID_LEN] = 0x0d;
+      
+    if(ready_to_bcast && Check_basket_id_format((char*)tmp)){
+      SendMessage(BrdAddr, (char*)tmp);
       ready_to_bcast = 0;
+      HalUARTWrite(UART_PC_PORT, tmp, BASKET_ID_LEN+1);
     }
-    HalUARTWrite(UART_PC_PORT, (char*)tmp, len);
   }
   else if(events == UART_PC_EVENT){
     //Data transfer from computer stor in pc_buff
     uint8 len;
-    uint8 _tmp[16];
-    char tmp[16];
-    pc_buff = bufPop(pc_buff, _tmp, &len);
-    osal_memcpy(tmp,_tmp,16);
-    if(ready_to_bcast && Check_basket_id_format(tmp)){
-      SendMessage(BrdAddr, tmp);
-      ready_to_bcast = 0;
-    }
-    HalUARTWrite(UART_PC_PORT, (char*)tmp, len);
+    uint8 tmp[PC_CMD_LEN+1];
+    pc_buff = bufPop(pc_buff, tmp, &len);
+    tmp[BASKET_ID_LEN] = 0x0d;
 
-    //check if basket_buff is have data
-    //uint8 have_data = bufCount(basket_buff);
-    //osal_set_event(Cashier_TaskID, UART_SCANNER_EVENT);
-    uint8 have_data = bufCount(pc_buff);
-    if(have_data>0)
-      osal_set_event(Cashier_TaskID, UART_PC_EVENT);
+    if(ready_to_bcast && Check_pc_cmd_format((char*)tmp)){
+      SendMessage(BrdAddr, (char*)tmp);
+      HalUARTWrite(UART_PC_PORT, tmp, PC_CMD_LEN+1);
+    }
   }
 
   else if ( events & SYS_EVENT_MSG ){
@@ -254,7 +246,7 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
               || (Cashier_NwkState == DEV_END_DEVICE) ){
                 
             // Start sending "the" message in a regular interval.
-            osal_start_timerEx( Cashier_TaskID, 0x001, TIMEOUT );
+            osal_start_timerEx( Cashier_TaskID, 0x001, Q_BUSTING_TIMEOUT );
           }
           break;
 
@@ -272,7 +264,13 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
     // return unprocessed events
     return (events ^ SYS_EVENT_MSG);
   }
-
+  //check if basket_buff is have data
+  uint8 have_data = bufCount(basket_buff);
+  if(have_data>0)
+    osal_set_event(Cashier_TaskID, UART_SCANNER_EVENT);
+  have_data = bufCount(pc_buff);
+  if(have_data>0)
+    osal_set_event(Cashier_TaskID, UART_PC_EVENT);
   return 0;
 }
 
@@ -310,9 +308,9 @@ void HandleKeys( byte shift, byte keys ){
       dstAddr.addr.shortAddr = 0x0000; // Coordinator
       ZDP_EndDeviceBindReq( &dstAddr, NLME_GetShortAddr(),
                             epDesc.endPoint,
-                            PROFID,
-                            MAX_CLUSTERS, (cId_t *)ClusterList,
-                            MAX_CLUSTERS, (cId_t *)ClusterList,
+                            Q_BUSTING_PROFID,
+                            Q_BUSTING_MAX_CLUSTERS, (cId_t *)ClusterList,
+                            Q_BUSTING_MAX_CLUSTERS, (cId_t *)ClusterList,
                             FALSE );
     }
 
@@ -325,9 +323,9 @@ void HandleKeys( byte shift, byte keys ){
       dstAddr.addrMode = AddrBroadcast;
       dstAddr.addr.shortAddr = NWK_BROADCAST_SHORTADDR;
       ZDP_MatchDescReq( &dstAddr, NWK_BROADCAST_SHORTADDR,
-                        PROFID,
-                        MAX_CLUSTERS, (cId_t *)ClusterList,
-                        MAX_CLUSTERS, (cId_t *)ClusterList,
+                        Q_BUSTING_PROFID,
+                        Q_BUSTING_MAX_CLUSTERS, (cId_t *)ClusterList,
+                        Q_BUSTING_MAX_CLUSTERS, (cId_t *)ClusterList,
                         FALSE );
     }
   }
@@ -346,7 +344,7 @@ void SendMessage(afAddrType_t dstAddr, char* message){
   
   char theMessageData[80];
   osal_memcpy(theMessageData,message,osal_strlen(message));
-  if ( AF_DataRequest( &dstAddr, &epDesc, CLUSTERID,
+  if ( AF_DataRequest( &dstAddr, &epDesc, Q_BUSTING_CLUSTERID,
                        (byte)(osal_strlen( theMessageData ) + 1),
                        (byte *)&theMessageData,
                        &Cashier_TransID,
