@@ -1987,7 +1987,7 @@
         </option>
         <option>
           <name>ExtraOutputFile</name>
-          <state>HandheldApp.sim</state>
+          <state>Handheld.sim</state>
         </option>
         <option>
           <name>ExtraOutputFormat</name>
@@ -2353,7 +2353,7 @@
         </option>
         <option>
           <name>General Far22 Heap Size</name>
-          <state>0x7FF</state>
+          <state>0xFFF</state>
         </option>
         <option>
           <name>GeneralMisraVer</name>

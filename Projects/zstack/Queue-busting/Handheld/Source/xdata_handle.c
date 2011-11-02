@@ -1,6 +1,7 @@
 #include <hal_types.h>
 #include "Serialize.h"
 #include "dataflash.h"
+#include "OSAL.h"
 #include "common.h"
 #include "xdata_handle.h"
 /*******Flash Layout*************
@@ -18,67 +19,83 @@
 #define  FLASH_HEADER_SIZE  0x03
 #define  BASKET_FLAG        "&"
 #define  BASKET_FLAG_SIZE   0x01
-/*
+/**
 */
 typedef   struct{
   uint8   num;
   uint16  size;
 }FlashHeader;
-/*
+/**
 */
 typedef   struct{
   uint8   flag;
   Basket  data;
 }FlashMember;
-static FlashMember   tmpMember;
+static FlashMember   *pMember;
 static FlashHeader  InfoBaskets;
-/*
-* @brief Clear all Basket, init header
+/**
+* @fn       FlashReset
+* @brief    Clear all Basket, init header
+* @param    none
+* @return   none
 */
 void FlashReset(void){
   InfoBaskets.num=0;
   InfoBaskets.size=sizeof(Basket)+1;
   FlashWrite(START_ADDRESS,(uint8*) &InfoBaskets,FLASH_HEADER_SIZE);
 }
-/*
-* @return: address of FlashMember, else 0
+/**
+* @fn       FindBasket
+* @brief
+* @param    pID
+* @return:  address of FlashMember, else 0
  */
 static ST_uint32 FindBasket(uint8 *pID)
 {
   uint8   i;
   ST_uint32 addr;
+  if(pMember==NULL)
+    return 1;
   FlashRead(START_ADDRESS,(uint8*) &InfoBaskets,FLASH_HEADER_SIZE);
   i=0;
   while(i<InfoBaskets.num)
   {
     addr=(ST_uint32)(START_ADDRESS+FLASH_HEADER_SIZE+InfoBaskets.size*i);
-    FlashRead(addr,(ST_uint8*)&tmpMember,BASKET_FLAG_SIZE+BASKET_ID_LEN+PRODS_NUM_SIZE);
-    if(tmpMember.flag && IsSameString((uint8*)tmpMember.data.id,pID,BASKET_ID_LEN))
+    FlashRead(addr,(ST_uint8*)pMember,BASKET_FLAG_SIZE+BASKET_ID_LEN+PRODS_NUM_SIZE);
+    if(pMember->flag && IsSameString((uint8*)pMember->data.id,pID,BASKET_ID_LEN))
       return addr;
     i++;
   }
   return 0;
 }
-/*
+/**
+* @fn     ReadBasket
+* @brief
+* @param  pID
 * @return NULL: not found, other:found
 */
 Basket* ReadBasket(uint8 *pID)
 {
-  ST_uint32  addr = FindBasket(pID);
+  ST_uint32  addr;
+  pMember=(FlashMember *)osal_msg_allocate(sizeof(FlashMember));
+  addr = FindBasket(pID);
   if(addr){
     FlashRead((ST_uint32)addr+BASKET_FLAG_SIZE+BASKET_ID_LEN+PRODS_NUM_SIZE,
-              (ST_uint8*)(tmpMember.data.prods),(tmpMember.data.len)*(sizeof(Product)));
-    return &tmpMember.data;
+              (ST_uint8*)(pMember->data.prods),(pMember->data.len)*(sizeof(Product)));
+    return &pMember->data;
   }else
     return NULL;
 }
-/*
+/**
 * @return 0: success, 1: fail, not exist
 */
 uint8 EraseBasket(uint8 *pID)
 {
-  uint8   i=0;
-  ST_uint32  addr = FindBasket(pID);
+  uint8   i=0,rt;
+  ST_uint32  addr;
+  if(pMember== NULL)
+    return 1;
+  addr = FindBasket(pID);
   if(addr)
   {
     /// Clear Flag of FlashMember (Basket)
@@ -86,11 +103,13 @@ uint8 EraseBasket(uint8 *pID)
      //Update flash header
      InfoBaskets.num--;
      FlashWrite(START_ADDRESS,(uint8*) &InfoBaskets,FLASH_HEADER_SIZE);
-     return 0;
+     rt= 0;
   }else
-    return 1;
+    rt= 1;
+  osal_msg_deallocate((uint8*)pMember);
+  return rt;
 }
-/*
+/**
 * @return 0: Success
 */
 uint8 WriteBasket(Basket *pBasket)

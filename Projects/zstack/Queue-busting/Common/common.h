@@ -41,13 +41,15 @@ typedef struct {
 /*********************************************************************
  * CODE
  */
-
+//======For Handheld
 #define REQUEST_BASKET			'%'	//request for basket_id
 #define DEL_BASKET			'^'	//del basket_id
+#define ALL_BASKET                       "all"
+#define ALL_BASKET_SIZE                  3
+
 #define ADD_PRODS_CODE			'&'	//add product to basket
 #define DEL_PRODS_CODE			'*'	//del product out of basket
 #define CHANGE_PRODS_LABEL		'@'	//change lable for data
-#define ALL_BASKET                       "all"
 
 
 

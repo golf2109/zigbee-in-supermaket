@@ -2,8 +2,16 @@
 #include "hal_led.h"
 #include "buffer.h"
 #include "common.h"
+#include "OSAL.h"
 #include "xdata_handle.h"
 #include "scanner_handle.h"
+
+/**df*/
+#define BASKET_ID_NULL  "--------"
+/**Store Basket scanning*/
+static Basket  *CurrentBasket;
+/**Point to Product scanning*/
+static Product *CurrentProduct;
 /***
 * return 0: error, other: the number of bytes of string
 */
@@ -56,21 +64,22 @@ static Product* FindProductInBasket(uint8 *prodID,const uint8 length,Basket * ba
     }
   return NULL;
 }
-//===============
-#define BASKET_ID_NULL  "--------"
-static Basket  CurrentBasket;
-static Product *CurrentProduct;
-
-static void NewBasket(Basket *a, uint8 * id)
+/*
+* 
+*/
+static Basket * NewBasket(uint8 * id)
 {
   //Clear Current Basket ID
-  CopyString((uint8*)a->id,id,BASKET_ID_LEN);
+  //CopyString((uint8*)a->id,id,BASKET_ID_LEN);
+  Basket * pk =(Basket *)osal_msg_allocate(sizeof(Basket));
+  osal_memcpy((uint8*)pk->id,(uint8*)id,BASKET_ID_LEN);
   //Clear len
-  a->len =0;
+  pk->len =0;
+  return pk;
 }
 void ScannerHandleInit(void)
 {
-  NewBasket(&CurrentBasket,BASKET_ID_NULL);
+  CurrentBasket=NULL;
   CurrentProduct = NULL;
 }
 
@@ -84,30 +93,30 @@ void ScannerHandleInput(ringBuf_t *pBuf)
     if(IsBasketID(tmp,count))
     {
       //Basket ID is not null
-      if(IsSameString((uint8*)(CurrentBasket.id),BASKET_ID_NULL,BASKET_ID_LEN)==0)
+      if(CurrentBasket)
       {
-        if(CurrentBasket.len > 0)
+        if(CurrentBasket->len > 0)
         {
           //Store to Flash
-          WriteBasket(&CurrentBasket);
-          ;
+          WriteBasket(CurrentBasket);
         }
-        if(IsSameString((uint8*)(CurrentBasket.id),tmp,BASKET_ID_LEN))
+        //Close Basket
+        osal_msg_deallocate((uint8*)CurrentBasket);
+        
+        if(IsSameString((uint8*)(CurrentBasket->id),tmp,BASKET_ID_LEN))
         { 
-          //Close Basket
-          NewBasket(&CurrentBasket,BASKET_ID_NULL);
           //Signal to User: turn off LED
           HalLedSet( HAL_LED_4, HAL_LED_MODE_OFF );
         }else{
           //New Basket;
-          NewBasket(&CurrentBasket,tmp);
+          CurrentBasket=NewBasket(tmp);
           // Signal to User: turn on LED
           HalLedSet( HAL_LED_4, HAL_LED_MODE_ON );
         }
       }else//null
       {
         //New Basket;
-        NewBasket(&CurrentBasket,tmp);
+       CurrentBasket= NewBasket(tmp);
         // Signal to User: turn on LED
         HalLedSet( HAL_LED_4, HAL_LED_MODE_ON );
       }
@@ -115,28 +124,24 @@ void ScannerHandleInput(ringBuf_t *pBuf)
     else if(IsProductID(tmp, count))
     {
       //Basket is opened
-      if(IsSameString((uint8*)(CurrentBasket.id),BASKET_ID_NULL,BASKET_ID_LEN)==0)
+      if(IsSameString((uint8*)(CurrentBasket->id),BASKET_ID_NULL,BASKET_ID_LEN)==0)
       {
-        CurrentProduct=FindProductInBasket(tmp,count,&CurrentBasket);
+        CurrentProduct=FindProductInBasket(tmp,count,CurrentBasket);
         if(CurrentProduct!=NULL)//Exist Product in Current Basket
         {
           CurrentProduct->num++;
         }else//New Product in Current Basket
         {
-          CurrentProduct=(Product*)(&CurrentBasket.prods[CurrentBasket.len]);
+          CurrentProduct=(Product*)(&CurrentBasket->prods[CurrentBasket->len]);
           CopyString(CurrentProduct->id,tmp,PRODS_ID_LEN);
           CurrentProduct->num=1;
-          CurrentBasket.len++;
+          CurrentBasket->len++;
         }
       }else
         ;//Drop
     }else if(IsSameString("@FlashReset",tmp,11))//Reset Flash
     {
       FlashReset();
-    }else if(IsSameString("@FlashRead",tmp,10)){
-      //test
-      Basket *pBasket;
-      pBasket =ReadBasket("#1234567890123");
     }else{
       //Drope
     }
