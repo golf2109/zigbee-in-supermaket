@@ -448,6 +448,7 @@
           <name>CCIncludePath2</name>
           <state>$PROJ_DIR$</state>
           <state>$PROJ_DIR$\..\Source</state>
+          <state>$PROJ_DIR$\..\..\Common</state>
           <state>$PROJ_DIR$\..\..\..\ZMain\TI2530DB</state>
           <state>$PROJ_DIR$\..\..\..\..\..\Components\hal\include</state>
           <state>$PROJ_DIR$\..\..\..\..\..\Components\hal\target\CC2530EB</state>
@@ -3183,22 +3184,37 @@
   <group>
     <name>App</name>
     <file>
-      <name>$PROJ_DIR$\..\Source\buffer.c</name>
-    </file>
-    <file>
       <name>$PROJ_DIR$\..\Source\cashier\cashier.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\Source\cashier\cashier.h</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\Source\common.c</name>
+      <name>$PROJ_DIR$\..\..\Common\common.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\Common\common.h</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\Source\hal_int.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\Source\hal_int.h</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\Source\list.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\Source\list.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\Source\cashier\OSAL_cashier.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\Source\uart.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\Source\uart.h</name>
     </file>
   </group>
   <group>

@@ -2,27 +2,30 @@
 #define COMMON_H
 
 #include <hal_types.h>
-#include "common.h"
+
 /*********************************************************************
  * DATA FOR BASKET
  */
-#define MAX_PRODS			25		//max products in one basket
-#define PRODS_ID_LEN		7		//len of product_id
-#define PROD_ID_MIN_LEN         7
-#define PROD_ID_MAX_LEN         7
-#define OFFSET				PRODS_ID_LEN + 1	//offset beetwen two product_id
-#define BASKET_ID_LEN		8		//len of basket_id
-#define BASKET_ID_SIGN          '#'
+#define MAX_PRODS		25		//max products in one basket
+#define PRODS_ID_LEN		13		//len of product_id
+#define BASKET_ID_LEN		8		//BASKET_ID_FORMAT +7
+#define BASKET_ID_FORMAT        '#'
+
+typedef struct Product{
+  uint8 id[PRODS_ID_LEN];
+  uint8  num;
+}Product;
+
 typedef struct {
 	char basket_id[BASKET_ID_LEN];
 	uint8 len;
-	uint8 offset;
-	char prods_id[MAX_PRODS*(OFFSET)];
+	Product prods[MAX_PRODS];
 }Basket;
-typedef struct {
-	uint8 id[PRODS_ID_LEN];
-	uint8  num;
-}Product;
+/*********************************************************************
+ * DATA FROM PC
+ */
+#define PC_CMD_LEN		8		//len of command
+#define PC_CMD_FORMAT		'$'		//len of command
 /*********************************************************************
  * MODE
  */
@@ -32,10 +35,12 @@ typedef struct {
 /*********************************************************************
  * CODE
  */
-#define REQUEST_CODE			"**"	//request for basket_id
-#define ADD_PRODS_CODE			"++"	//add product to basket
-#define DEL_PRODS_CODE			"--"	//del product out of basket
-#define CHANGE_PRODS_LABEL		"&&"	//change lable for data
+#define REQUEST_BASKET			'^'	//request for basket_id
+#define DEL_BASKET			'^'	//del basket_id
+#define ADD_PRODS_CODE			'&'	//add product to basket
+#define DEL_PRODS_CODE			'*'	//del product out of basket
+#define CHANGE_PRODS_LABEL		'@'	//change lable for data
+
 
 /*********************************************************************
  * SECURITY
@@ -76,6 +81,8 @@ typedef struct {
  */
  extern char* int2char(int num);
  extern void printText(char* text, uint8 line);
+ extern uint8 strcmp(char* txt1, char* txt2);
  extern uint8 IsSameString(uint8 *a, uint8* b,const uint8 numBytsCompare);
  void CopyString(uint8 *d, uint8* s,const uint8 numByts);
+ 
 #endif
