@@ -1,14 +1,19 @@
 package com.Gui;
 
 import java.awt.Choice;
+import java.awt.PopupMenu;
 import java.awt.Rectangle;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Enumeration;
 
+import javax.comm.CommPortIdentifier;
+import javax.comm.SerialPort;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
@@ -22,8 +27,10 @@ import jxl.write.WriteException;
 
 import com.RevData;
 import com.Excel.WriteFile;
+import com.Uart.Read;
+import com.Uart.Write;
 
-public class MainGui2 extends JFrame {
+public class MainGui extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	JPanel jContentPane = null;  //  @jve:decl-index=0:visual-constraint="145,69"
@@ -40,20 +47,32 @@ public class MainGui2 extends JFrame {
 	private JScrollPane jScrollPane = null;
 	private JLabel jLabel1IP = null;
 	private JTextField jTextFieldIP = null;
-	String HostIP;
-	int port;
 	static String PathDatabase ="c:/temp/Database.xls";
 	private JCheckBox jCheckBoxUART = null;
 	private JCheckBox jCheckBoxETHERNET = null;
 	private JButton jButtonOK = null;
 	private Choice choice = null;
-	private JList jList = null;
+	private static JList jList = null;
 	private JLabel jLabel1PacketID = null;
 	private JLabel jLabel1PID = null;
+	private JButton jButtonSendCom = null;
+	private JLabel jLabel1text = null;
+	
+	String HostIP;
+	int port;
+	static CommPortIdentifier portId;
+	static Enumeration portList;
+	InputStream inputStream;
+	SerialPort serialPort;
+	Thread readThread;
+	int numBytes;
+	byte[] readBuffer = new byte[20];
+	private JButton jButtonWriteCom1 = null;
+	private JButton jButtonCheckComPort = null;
 	/**
 	 * This is the default constructor
 	 */
-	public MainGui2() {
+	public MainGui() {
 		super();
 		initialize();
 	}
@@ -94,6 +113,9 @@ public class MainGui2 extends JFrame {
 	 */
 	private JPanel getJContentPane() {
 		if (jContentPane == null) {
+			jLabel1text = new JLabel();
+			jLabel1text.setBounds(new Rectangle(130, 391, 152, 30));
+			jLabel1text.setText("");
 			jLabel1PID = new JLabel();
 			jLabel1PID.setBounds(new Rectangle(333, 278, 47, 27));
 			jLabel1PID.setText("");
@@ -131,6 +153,10 @@ public class MainGui2 extends JFrame {
 			jContentPane.add(getChoice(), null);
 			jContentPane.add(jLabel1PacketID, null);
 			jContentPane.add(jLabel1PID, null);
+			jContentPane.add(getJButtonSendCom(), null);
+			jContentPane.add(jLabel1text, null);
+			jContentPane.add(getJButtonWriteCom1(), null);
+			jContentPane.add(getJButtonCheckComPort(), null);
 			setResizable(false);
 		}
 		return jContentPane;
@@ -146,6 +172,7 @@ public class MainGui2 extends JFrame {
 			jButtonConnect = new JButton();
 			jButtonConnect.setBounds(new Rectangle(393, 344, 99, 35));
 			jButtonConnect.setText("Connect");
+			jButtonConnect.setVisible(false);
 			jButtonConnect.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
 					System.out.println("actionPerformed()"); // TODO Auto-generated Event stub actionPerformed()
@@ -200,6 +227,7 @@ public class MainGui2 extends JFrame {
 		if (jButtonDisconnect == null) {
 			jButtonDisconnect = new JButton();
 			jButtonDisconnect.setText("Disconnect");
+			jButtonDisconnect.setVisible(false);
 			jButtonDisconnect.setBounds(new Rectangle(393, 382, 99, 34));
 			jButtonDisconnect.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -361,6 +389,8 @@ public class MainGui2 extends JFrame {
 					jLabelPort.setVisible(false);
 					jTextFieldIP.setVisible(false);
 					jTextFieldPort.setVisible(false);
+					jButtonConnect.setVisible(false);
+					jButtonDisconnect.setVisible(false);
 					if(jCheckBoxUART.isSelected()){
 						jCheckBoxUART.setSelected(true);
 					}else{
@@ -404,6 +434,8 @@ public class MainGui2 extends JFrame {
 					jLabelPort.setVisible(true);
 					jTextFieldIP.setVisible(true);
 					jTextFieldPort.setVisible(true);
+					jButtonConnect.setVisible(true);
+					jButtonDisconnect.setVisible(true);
 					if(jCheckBoxETHERNET.isSelected()){
 						jCheckBoxETHERNET.setSelected(true);
 					}else{
@@ -471,7 +503,7 @@ public class MainGui2 extends JFrame {
 					jList.setListData(_c);
 					WriteFile _testWrite = new WriteFile();
 					try {
-						String Path = _testGetData.GerneralPathToWrite(_b[0]);
+						String Path = RevData.GerneralPathToWrite(_b[0]);
 						_testWrite.writeExcel(Path, _b, _b.length);
 					} catch (WriteException e1) {
 						// TODO Auto-generated catch block
@@ -495,10 +527,6 @@ public class MainGui2 extends JFrame {
 		if (choice == null) {
 			choice = new Choice();
 			choice.setBounds(new Rectangle(310, 345, 71, 38));
-			choice.add("COM1");
-			choice.add("COM2");
-			choice.add("COM3");
-			choice.add("COM4");
 			choice.setVisible(true);
 			
 			
@@ -517,14 +545,101 @@ public class MainGui2 extends JFrame {
 		}
 		return jList;
 	}
-	public static void main(String arg[]) {
-		MainGui2 a = new MainGui2(); 
+	/**
+	 * This method initializes jButtonSendCom	
+	 * 	
+	 * @return javax.swing.JButton	
+	 */
+	private JButton getJButtonSendCom() {
+		if (jButtonSendCom == null) {
+			jButtonSendCom = new JButton();
+			jButtonSendCom.setBounds(new Rectangle(154, 337, 147, 32));
+			jButtonSendCom.setText("Recv Data From ");
+			jButtonSendCom.addActionListener(new java.awt.event.ActionListener() {
+				public void actionPerformed(java.awt.event.ActionEvent e) {
+					boolean portFound = false;
+					String defaultPort = choice.getSelectedItem();
+					portList = CommPortIdentifier.getPortIdentifiers();
+
+					while (portList.hasMoreElements()) {
+						jLabel1text.setText("Reading "+ choice.getSelectedItem());
+						portId = (CommPortIdentifier) portList.nextElement();
+						if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
+							if (portId.getName().equals(defaultPort)) {
+								System.out.println("Found port: " + defaultPort);
+								portFound = true;
+								Read reader = new Read(portId);
+							}
+						}
+					}
+					if (!portFound) {
+						jLabel1text.setText("Port not found.");
+					}
+				}
+			});
+		}
+		return jButtonSendCom;
+	}
+     public static void ShowResult(){
+    	 String [] Data = new String [1];
+		 Data[0]= new String(Read.readBuffer);
+		 jList.setListData(Data);
+     }
+	/**
+	 * This method initializes jButtonWriteCom1	
+	 * 	
+	 * @return javax.swing.JButton	
+	 */
+	private JButton getJButtonWriteCom1() {
+		if (jButtonWriteCom1 == null) {
+			jButtonWriteCom1 = new JButton();
+			jButtonWriteCom1.setBounds(new Rectangle(255, 393, 132, 28));
+			jButtonWriteCom1.setText("Just for my test");
+			jButtonWriteCom1.addActionListener(new java.awt.event.ActionListener() {
+				public void actionPerformed(java.awt.event.ActionEvent e) {
+					Write test= new Write();
+					test.WriteData("COM1","hello hp");
+				}
+			});
+		}
+		return jButtonWriteCom1;
 	}
 
-//	public static void main(String[] args) {
-//		//Start the threads
-//	
-//		//System.out.println(Thread.currentThread());
-//	}
+	/**
+	 * This method initializes jButtonCheckComPort	
+	 * 	
+	 * @return javax.swing.JButton	
+	 */
+	private JButton getJButtonCheckComPort() {
+		if (jButtonCheckComPort == null) {
+			jButtonCheckComPort = new JButton();
+			jButtonCheckComPort.setBounds(new Rectangle(154, 305, 103, 29));
+			jButtonCheckComPort.setText("CheckPort");
+			jButtonCheckComPort.addActionListener(new java.awt.event.ActionListener() {
+				public void actionPerformed(java.awt.event.ActionEvent e) {
+					Enumeration port_list = CommPortIdentifier.getPortIdentifiers();
+					choice.removeAll();
+					if(!port_list.hasMoreElements()) choice.add("not found");
+					while (port_list.hasMoreElements())
+					{
+						CommPortIdentifier port_id = (CommPortIdentifier)port_list.nextElement();
+					
+						if (port_id.getPortType() == CommPortIdentifier.PORT_SERIAL)
+							{
+								choice.add(port_id.getName());
+							}
+							else if (port_id.getPortType() == CommPortIdentifier.PORT_PARALLEL)
+								{
+									System.out.println ("Parallel port: " + port_id.getName());
+								}
+						}
+				}
+			});
+		}
+		return jButtonCheckComPort;
+	}
 
-}  //  @jve:decl-index=0:visual-constraint="130,24"
+	public static void main(String arg[]) {
+		MainGui a = new MainGui(); 
+	}
+}
