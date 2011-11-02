@@ -3,59 +3,10 @@
   Revised:        $Date: 2010-12-21 10:27:34 -0800 (Tue, 21 Dec 2010) $
   Revision:       $Revision: 24670 $
 
-  Description:    Generic Application (no Profile).
+  Description:    Handheld Application (no Profile).
 
-
-  Copyright 2004-2010 Texas Instruments Incorporated. All rights reserved.
-
-  IMPORTANT: Your use of this Software is limited to those specific rights
-  granted under the terms of a software license agreement between the user
-  who downloaded the software, his/her employer (which must be your employer)
-  and Texas Instruments Incorporated (the "License").  You may not use this
-  Software unless you agree to abide by the terms of the License. The License
-  limits your use, and you acknowledge, that the Software may not be modified,
-  copied or distributed unless embedded on a Texas Instruments microcontroller
-  or used solely and exclusively in conjunction with a Texas Instruments radio
-  frequency transceiver, which is integrated into your product. Other than for
-  the foregoing purpose, you may not use, reproduce, copy, prepare derivative
-  works of, modify, distribute, perform, display or sell this Software and/or
-  its documentation for any purpose.
-
-  YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
-  PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
-  INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
-  NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
-  TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
-  NEGLIGENCE, STRICT LIABILITY, CONTRIBUTION, BREACH OF WARRANTY, OR OTHER
-  LEGAL EQUITABLE THEORY ANY DIRECT OR INDIRECT DAMAGES OR EXPENSES
-  INCLUDING BUT NOT LIMITED TO ANY INCIDENTAL, SPECIAL, INDIRECT, PUNITIVE
-  OR CONSEQUENTIAL DAMAGES, LOST PROFITS OR LOST DATA, COST OF PROCUREMENT
-  OF SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
-  (INCLUDING BUT NOT LIMITED TO ANY DEFENSE THEREOF), OR OTHER SIMILAR COSTS.
-
-  Should you have any questions regarding your right to use this Software,
-  contact Texas Instruments Incorporated at www.TI.com.
 ******************************************************************************/
 
-/*********************************************************************
-  This application isn't intended to do anything useful, it is
-  intended to be a simple example of an application's structure.
-
-  This application sends "Hello World" to another "Generic"
-  application every 15 seconds.  The application will also
-  receive "Hello World" packets.
-
-  The "Hello World" messages are sent/received as MSG type message.
-
-  This applications doesn't have a profile, so it handles everything
-  directly - itself.
-
-  Key control:
-    SW1:
-    SW2:  initiates end device binding
-    SW3:
-    SW4:  initiates a match description request
-*********************************************************************/
 
 /*********************************************************************
  * INCLUDES
@@ -278,8 +229,7 @@ UINT16 HandheldApp_ProcessEvent( byte task_id, UINT16 events )
           {
             // The data wasn't delivered -- Do something
           }else{
-            //========Erase Basket========
-            //EraseBasket(sentBasketID);
+            ;
           }
           break;
 
@@ -320,14 +270,6 @@ UINT16 HandheldApp_ProcessEvent( byte task_id, UINT16 events )
   //  (setup in HandheldApp_Init()).
   if ( events & HANDHELDAPP_SEND_MSG_EVT )
   {
-    // Send "the" message
-    /*HandheldApp_SendTheMessage();
-
-    // Setup to send message again
-    /osal_start_timerEx( HandheldApp_TaskID,
-                        HANDHELDAPP_SEND_MSG_EVT,
-                        HANDHELDAPP_SEND_MSG_TIMEOUT );
-    */
     ScannerHandleInput(&ScannerBuf);
     // return unprocessed events
     return (events ^ HANDHELDAPP_SEND_MSG_EVT);
@@ -494,23 +436,32 @@ void HandheldApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
   switch ( pkt->clusterId )
   {
     case HANDHELDAPP_CLUSTERID:
-      pBasket =ReadBasket(pkt->cmd.Data);
-      if(pBasket)
+      if(pkt->cmd.Data[0]== REQUEST_BASKET)
       {
-        if ( AF_DataRequest( &pkt->srcAddr, &HandheldApp_epDesc,
-                       HANDHELDAPP_CLUSTERID,BASKET_ID_LEN+PRODS_NUM_SIZE+
-                       (pBasket->len)*(sizeof(Product)),
-                       (byte *)pBasket,
-                       &HandheldApp_TransID,
-                       AF_DISCV_ROUTE|AF_ACK_REQUEST, AF_DEFAULT_RADIUS ) == afStatus_SUCCESS )
+        pBasket =ReadBasket(pkt->cmd.Data+1);
+        if(pBasket)
         {
-          // Successfully requested to be sent.
+          if ( AF_DataRequest( &pkt->srcAddr, &HandheldApp_epDesc,
+                         HANDHELDAPP_CLUSTERID,BASKET_ID_LEN+PRODS_NUM_SIZE+
+                         (pBasket->len)*(sizeof(Product)),
+                         (byte *)pBasket,
+                         &HandheldApp_TransID,
+                         AF_DISCV_ROUTE|AF_ACK_REQUEST, AF_DEFAULT_RADIUS ) == afStatus_SUCCESS )
+          {
+            // Successfully requested to be sent.
+          }
+          else
+          {
+            // Error occurred in request to send.
+          }
         }
-        else
-        {
-          // Error occurred in request to send.
-        }
-        CopyString(sentBasketID, (uint8*)pBasket->id,BASKET_ID_LEN);
+      }else if(pkt->cmd.Data[0]== DEL_BASKET)
+      {
+        if(IsSameString(pkt->cmd.Data+1,ALL_BASKET,ALL_BASKET_SIZE))
+          //Erase all basket
+          FlashReset();
+        else//Erase the Basket
+          EraseBasket(pkt->cmd.Data+1);
       }
       // "the" message
 #if defined( LCD_SUPPORTED )

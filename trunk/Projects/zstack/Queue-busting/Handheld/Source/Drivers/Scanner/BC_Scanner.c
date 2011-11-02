@@ -19,7 +19,13 @@
 
 extern byte HandheldApp_TaskID;
 extern ringBuf_t ScannerBuf;
-//
+/*
+* @fn       BC_ScannerInit
+* @brief    initialize barcode scanner UART
+*
+* @param    none
+* @return   none
+*/
 void BC_ScannerInit(void){
   halUARTCfg_t uartConfig;
   uartConfig.configured           = TRUE;              // 2x30 don't care - see uart driver.
@@ -34,7 +40,7 @@ void BC_ScannerInit(void){
   HalUARTOpen (BC_SCANNER_PORT, &uartConfig);
 }
 /*********************************************************************
- * @fn      BC_Scanner
+ * @fn      BC_Scanner_CallBack
  * @brief   Process all event form UART that connect to barcode scannner
  *
  * @param   - port of the UART
@@ -63,7 +69,7 @@ void BC_Scanner_CallBack(uint8 port, uint8 event){
       }
       count = bufPut(&ScannerBuf,tmp_buf,count);
       if(count ==0){
-        //buffer overflow;
+        //buffer overflow; 
         break;
       }
       rx_buf_len -=count;
