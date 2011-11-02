@@ -12,13 +12,16 @@ import javax.comm.SerialPortEvent;
 import javax.comm.SerialPortEventListener;
 import javax.comm.UnsupportedCommOperationException;
 
+import com.Gui.MainGui;
+
 public class Read implements Runnable, SerialPortEventListener {
 	static CommPortIdentifier portId;
 	static Enumeration portList;
-	InputStream inputStream;
-	SerialPort serialPort;
+	static InputStream inputStream;
+	static SerialPort serialPort;
 	Thread readThread;
-	byte[] readBuffer = new byte[20];
+	int numBytes;
+	public static byte[] readBuffer = new byte[20];
 
 	/**
 	 * Method declaration
@@ -28,27 +31,28 @@ public class Read implements Runnable, SerialPortEventListener {
 	 * 
 	 * @see
 	 */
-	public static void main(String[] args) {
-		boolean portFound = false;
-		String defaultPort = "COM1";
-
-		portList = CommPortIdentifier.getPortIdentifiers();
-
-		while (portList.hasMoreElements()) {
-			portId = (CommPortIdentifier) portList.nextElement();
-			if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-				if (portId.getName().equals(defaultPort)) {
-					System.out.println("Found port: " + defaultPort);
-					portFound = true;
-					Read reader = new Read();
-				}
-			}
-		}
-		if (!portFound) {
-			System.out.println("port " + defaultPort + " not found.");
-		}
-
-	}
+//	public static void main(String arg[]) {
+//		boolean portFound = false;
+//		String defaultPort = "COM2";
+//
+//		portList = CommPortIdentifier.getPortIdentifiers();
+//
+//		while (portList.hasMoreElements()) {
+//			portId = (CommPortIdentifier) portList.nextElement();
+//			if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
+//				if (portId.getName().equals(defaultPort)) {
+//					System.out.println("Found port: " + defaultPort);
+//					portFound = true;
+//					Read reader = new Read(serialPort,portId);
+//		
+//				}
+//			}
+//		}
+//		if (!portFound) {
+//			System.out.println("port " + defaultPort + " not found.");
+//		}
+//
+//	}
 
 	/**
 	 * Constructor declaration
@@ -56,7 +60,11 @@ public class Read implements Runnable, SerialPortEventListener {
 	 * 
 	 * @see
 	 */
-	public Read() {
+//	public Read(){
+//		
+//	}
+	public Read(CommPortIdentifier portId)
+	{
 		try {
 			serialPort = (SerialPort) portId.open("RecvData", 2000);
 		} catch (PortInUseException e) {
@@ -132,10 +140,11 @@ public class Read implements Runnable, SerialPortEventListener {
 
 			try {
 				while (inputStream.available() > 0) {
-					int numBytes = inputStream.read(readBuffer);
+					numBytes = inputStream.read(readBuffer);
+					
 				}
-
-				System.out.print(new String(readBuffer));
+				System.out.println(new String(readBuffer));
+				MainGui.ShowResult();
 			} catch (IOException e) {
 			}
 

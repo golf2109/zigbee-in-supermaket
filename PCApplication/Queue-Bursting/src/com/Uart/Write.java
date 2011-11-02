@@ -1,8 +1,13 @@
 package com.Uart;
 
-import java.io.*;
-import java.util.*;
-import javax.comm.*;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Enumeration;
+
+import javax.comm.CommPortIdentifier;
+import javax.comm.PortInUseException;
+import javax.comm.SerialPort;
+import javax.comm.UnsupportedCommOperationException;
 
 public class Write {
 	static Enumeration portList;
@@ -10,20 +15,16 @@ public class Write {
 	static String messageString = "Hello, world!\n";
 	static SerialPort serialPort;
 	static OutputStream outputStream;
+	public Write(){
+		
+	}
 
 	public void WriteData(String NumCom, String Out) {
-		// portList = CommPortIdentifier.getPortIdentifiers(NumCom);
-		try {
-			portId = CommPortIdentifier.getPortIdentifier(NumCom);
-		} catch (NoSuchPortException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		// while (portList.hasMoreElements()) {
-		// portId = (CommPortIdentifier) portList.nextElement();
-		// if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-		// if (portId.getName().equals(NumCom)) {
-		// // if (portId.getName().equals("/dev/term/a")) {
+		 portList = CommPortIdentifier.getPortIdentifiers();
+		 while (portList.hasMoreElements()) {
+		 portId = (CommPortIdentifier) portList.nextElement();
+		 if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
+		 if (portId.getName().equals(NumCom)) {
 		try {
 			serialPort = (SerialPort) portId.open("SendData", 2000);
 		} catch (PortInUseException e) {
@@ -46,7 +47,13 @@ public class Write {
 		}
 
 	}
-	// //// }
-	// // }
-	// }
+	  }
+	  }
+	 }
+	public static void main(String args[]) {
+		Write test = new Write();
+		test.WriteData("COM1", "hello hp");
+		System.out.println("done!");
+		
+	}
 }
