@@ -144,8 +144,8 @@ void ScannerHandleInput(ringBuf_t *pBuf)
     }else if(IsSameString("@FlashReset",tmp,11))//Reset Flash
     {
       FlashReset();
-    }else{
-      //Drope
+    }else if(IsSameString("@FlashRead",tmp,10)){
+      ReadBasket("#8864352");//Drope
     }
   }
 }
