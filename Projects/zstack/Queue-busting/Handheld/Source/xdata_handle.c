@@ -1,6 +1,7 @@
 #include <hal_types.h>
 #include "Serialize.h"
 #include "dataflash.h"
+#include "OSAL_Memory.h"
 #include "OSAL.h"
 #include "common.h"
 #include "xdata_handle.h"
@@ -50,12 +51,12 @@ void FlashReset(void){
 * @param    pID, pMember!=NULL
 * @return:  address of FlashMember, else 0
  */
-static ST_uint32 FindBasket(uint8 *pID)
+ST_uint32 FindBasket(uint8 *pID)
 {
   uint8   i;
   ST_uint32 addr,rt=0;
   if(pMember==NULL)
-    pMember=(FlashMember *)osal_msg_allocate(sizeof(FlashMember));
+    pMember=(FlashMember *)osal_mem_alloc(sizeof(FlashMember));
   FlashRead(START_ADDRESS,(uint8*) &InfoBaskets,FLASH_HEADER_SIZE);
   i=0;
   while(i<InfoBaskets.num)
@@ -66,8 +67,9 @@ static ST_uint32 FindBasket(uint8 *pID)
       rt=addr;
     i++;
   }
-  osal_msg_deallocate((uint8*)pMember);
-  return addr;
+  osal_mem_free((uint8*)pMember);
+  pMember=NULL;
+  return rt;
 }
 /**
 * @fn     ReadBasket
@@ -81,7 +83,7 @@ Basket* ReadBasket(uint8 *pID)
   addr = FindBasket(pID);
   if(addr){
 	if(pMember==NULL)
-		pMember=(FlashMember *)osal_msg_allocate(sizeof(FlashMember));
+		pMember=(FlashMember *)osal_mem_alloc(sizeof(FlashMember));
     FlashRead((ST_uint32)addr+BASKET_FLAG_SIZE+BASKET_ID_LEN+PRODS_NUM_SIZE,
               (ST_uint8*)(pMember->data.prods),(pMember->data.len)*(sizeof(Product)));
     return &pMember->data;
@@ -107,7 +109,10 @@ uint8 EraseBasket(uint8 *pID)
   }else
     rt= 1;
   if(pMember!=NULL)
-    osal_msg_deallocate((uint8*)pMember);
+  {
+    osal_mem_free((uint8*)pMember);
+    pMember=NULL;
+  }
   return rt;
 }
 /**
@@ -115,8 +120,10 @@ uint8 EraseBasket(uint8 *pID)
 */
 uint8 WriteBasket(Basket *pBasket)
 {
-  uint8   i,flag=0;
+  uint8   i,flag;
   ST_uint32 addr;
+  if(pBasket==NULL)
+    return 1;
   //Read Flash Header
   FlashRead(START_ADDRESS,(uint8*) &InfoBaskets,FLASH_HEADER_SIZE);
   //Find blank Basket
