@@ -2,6 +2,7 @@
 #define  _EXTERNAL_DATA_H_
 #include "common.h"
 void FlashReset(void);
+uint32 FindBasket(uint8 *pID);
 Basket* ReadBasket(uint8 *pID);
 uint8 WriteBasket(Basket *pBasket);
 uint8 EraseBasket(uint8 *pID);

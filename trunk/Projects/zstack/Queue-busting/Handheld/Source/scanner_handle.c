@@ -2,6 +2,7 @@
 #include "hal_led.h"
 #include "buffer.h"
 #include "common.h"
+#include "OSAL_Memory.h"
 #include "OSAL.h"
 #include "xdata_handle.h"
 #include "scanner_handle.h"
@@ -71,7 +72,7 @@ static Basket * NewBasket(uint8 * id)
 {
   //Clear Current Basket ID
   //CopyString((uint8*)a->id,id,BASKET_ID_LEN);
-  Basket * pk =(Basket *)osal_msg_allocate(sizeof(Basket));
+  Basket * pk =(Basket *)osal_mem_alloc(sizeof(Basket));
   osal_memcpy((uint8*)pk->id,(uint8*)id,BASKET_ID_LEN);
   //Clear len
   pk->len =0;
@@ -100,45 +101,46 @@ void ScannerHandleInput(ringBuf_t *pBuf)
           //Store to Flash
           WriteBasket(CurrentBasket);
         }
-        //Close Basket
-        osal_msg_deallocate((uint8*)CurrentBasket);
-        
         if(IsSameString((uint8*)(CurrentBasket->id),tmp,BASKET_ID_LEN))
         { 
+          //Close Basket
+          osal_mem_free((uint8*)CurrentBasket);
+          CurrentBasket=NULL;
           //Signal to User: turn off LED
           HalLedSet( HAL_LED_4, HAL_LED_MODE_OFF );
         }else{
           //New Basket;
-          CurrentBasket=NewBasket(tmp);
+          osal_memcpy((uint8*)CurrentBasket->id,tmp,BASKET_ID_LEN);
           // Signal to User: turn on LED
           HalLedSet( HAL_LED_4, HAL_LED_MODE_ON );
         }
       }else//null
       {
-        //New Basket;
-       CurrentBasket= NewBasket(tmp);
-        // Signal to User: turn on LED
-        HalLedSet( HAL_LED_4, HAL_LED_MODE_ON );
+        if(FindBasket(tmp)==0)
+        {
+          //New Basket;
+          CurrentBasket= NewBasket(tmp);
+          // Signal to User: turn on LED
+          HalLedSet( HAL_LED_4, HAL_LED_MODE_ON );
+        }else
+          HalLedSet( HAL_LED_4,HAL_LED_MODE_BLINK);
       }
     }
-    else if(IsProductID(tmp, count))
+    else if(IsProductID(tmp, count) &&CurrentBasket)//Basket is opened
     {
-      //Basket is opened
-      if(IsSameString((uint8*)(CurrentBasket->id),BASKET_ID_NULL,BASKET_ID_LEN)==0)
+      CurrentProduct=FindProductInBasket(tmp,count,CurrentBasket);
+      if(CurrentProduct!=NULL)//Exist Product in Current Basket
       {
-        CurrentProduct=FindProductInBasket(tmp,count,CurrentBasket);
-        if(CurrentProduct!=NULL)//Exist Product in Current Basket
-        {
-          CurrentProduct->num++;
-        }else//New Product in Current Basket
-        {
-          CurrentProduct=(Product*)(&CurrentBasket->prods[CurrentBasket->len]);
-          CopyString(CurrentProduct->id,tmp,PRODS_ID_LEN);
-          CurrentProduct->num=1;
-          CurrentBasket->len++;
-        }
-      }else
-        ;//Drop
+        CurrentProduct->num++;
+      }else//New Product in Current Basket
+      {
+        CurrentProduct=(Product*)(&CurrentBasket->prods[CurrentBasket->len]);
+        CopyString(CurrentProduct->id,tmp,PRODS_ID_LEN);
+        CurrentProduct->num=1;
+        CurrentBasket->len++;
+      }
+      HalLedSet( HAL_LED_2,HAL_LED_MODE_BLINK);
+
     }else if(IsSameString("@FlashReset",tmp,11))//Reset Flash
     {
       FlashReset();
