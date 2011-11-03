@@ -53,22 +53,18 @@ void FlashReset(void){
  */
 ST_uint32 FindBasket(uint8 *pID)
 {
-  uint8   i;
+  uint8   tmp[BASKET_FLAG_SIZE+BASKET_ID_LEN],i;
   ST_uint32 addr,rt=0;
-  if(pMember==NULL)
-    pMember=(FlashMember *)osal_mem_alloc(sizeof(FlashMember));
   FlashRead(START_ADDRESS,(uint8*) &InfoBaskets,FLASH_HEADER_SIZE);
   i=0;
   while(i<InfoBaskets.num)
   {
     addr=(ST_uint32)(START_ADDRESS+FLASH_HEADER_SIZE+InfoBaskets.size*i);
-    FlashRead(addr,(ST_uint8*)pMember,BASKET_FLAG_SIZE+BASKET_ID_LEN+PRODS_NUM_SIZE);
-    if(pMember->flag && IsSameString((uint8*)pMember->data.id,pID,BASKET_ID_LEN))
+    FlashRead(addr,(ST_uint8*)tmp,BASKET_FLAG_SIZE+BASKET_ID_LEN);
+    if(pMember->flag && IsSameString((uint8*)tmp+1,pID,BASKET_ID_LEN))
       rt=addr;
     i++;
   }
-  osal_mem_free((uint8*)pMember);
-  pMember=NULL;
   return rt;
 }
 /**
@@ -82,8 +78,10 @@ Basket* ReadBasket(uint8 *pID)
   ST_uint32  addr;
   addr = FindBasket(pID);
   if(addr){
-	if(pMember==NULL)
-		pMember=(FlashMember *)osal_mem_alloc(sizeof(FlashMember));
+    if(pMember==NULL)
+      pMember=(FlashMember *)osal_mem_alloc(sizeof(FlashMember));
+    FlashRead((ST_uint32)addr,
+              (ST_uint8*)(pMember),BASKET_FLAG_SIZE+BASKET_ID_LEN+PRODS_NUM_SIZE);
     FlashRead((ST_uint32)addr+BASKET_FLAG_SIZE+BASKET_ID_LEN+PRODS_NUM_SIZE,
               (ST_uint8*)(pMember->data.prods),(pMember->data.len)*(sizeof(Product)));
     return &pMember->data;
@@ -95,17 +93,17 @@ Basket* ReadBasket(uint8 *pID)
 */
 uint8 EraseBasket(uint8 *pID)
 {
-  uint8   i=0,rt;
+  uint8   rt;
   ST_uint32  addr;
   addr = FindBasket(pID);
   if(addr)
   {
     /// Clear Flag of FlashMember (Basket)
-     FlashWrite((ST_uint32)(addr),&i,1);
+     rt=0;
+     FlashWrite((ST_uint32)(addr),&rt,1);
      //Update flash header
      InfoBaskets.num--;
      FlashWrite(START_ADDRESS,(uint8*) &InfoBaskets,FLASH_HEADER_SIZE);
-     rt= 0;
   }else
     rt= 1;
   if(pMember!=NULL)
