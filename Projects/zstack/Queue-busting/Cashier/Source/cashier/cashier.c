@@ -33,6 +33,7 @@ afAddrType_t SrcAddr;	//source addr
 volatile uint8 have_basket;   //take role as signal
 volatile uint8 have_pccmd;   //take role as signal
 volatile uint8 ready_bcast;   //take role as signal
+volatile uint8 to_com;   //take role as signal
 uint8* basket_id_sent;
 /*********************************************************************
  * @brief   Check if it is basket_id format
@@ -142,6 +143,7 @@ void cashier_Init( byte task_id ){
   /*have_basket = 0;
   have_pccmd = 0;
   ready_bcast = 0;
+  to_com = 0;
   osal_start_reload_timer(Cashier_TaskID, TIMER_EVENT, TIMER_TIME_OUT );*/
 }
 
@@ -167,9 +169,12 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
   byte sentTransID;       // This should match the value sent
   (void)task_id;  // Intentionally unreferenced parameter
   uint8 len = 0,i=0;
+  uint8 basket_recv[BASKET_ID_LEN];
+  uint8 basket_sent[BASKET_ID_LEN];
   
   switch(events){
     case TIMER_EVENT:
+      to_com = 1;
       break;
     case UART_SCANNER_EVENT:
         HalLedSet ( HAL_LED_4, HAL_LED_MODE_ON );
@@ -230,25 +235,17 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
           break;
 
         case AF_INCOMING_MSG_CMD: // Incoming MSG type message
-          //print data of this message for debug
-          printText((char*)MSGpkt->cmd.Data,3);
-#ifdef  CLIENT
-          //if i have this basket_id
-          HalLedSet ( HAL_LED_3, HAL_LED_MODE_ON );
-          if(Check_basket_id((char*)MSGpkt->cmd.Data)==TRUE){
-            char* prod = "123456789 123456789 123456789 ";
-            DesAddr = MSGpkt->srcAddr;
-            SendMessage(DesAddr,prod);
+          osal_memcpy(basket_recv,MSGpkt->cmd.Data,BASKET_ID_LEN);
+          osal_memcpy(basket_sent,(basket_id_sent+1),BASKET_ID_LEN);
+          if(IsSameString(basket_recv,basket_sent,BASKET_ID_LEN)){
+            HalUARTWrite(UART_PC_PORT, MSGpkt->cmd.Data, MSGpkt->cmd.DataLength);
+            /*DesAddr = MSGpkt->srcAddr;
+            *(basket_id_sent) = DEL_BASKET;
+            SendMessage(DesAddr,(char*)basket_id_sent);
+            osal_memset(basket_id_sent,0,BASKET_ID_LEN+PC_CMD_LEN);*/
           }
-          HalLedSet ( HAL_LED_3, HAL_LED_MODE_OFF );
-#endif
-#ifdef  CASHIER
-          HalUARTWrite(UART_PC_PORT, MSGpkt->cmd.Data, MSGpkt->cmd.DataLength);
-          DesAddr = MSGpkt->srcAddr;
-          *(basket_id_sent) = DEL_BASKET;
-          SendMessage(DesAddr,(char*)basket_id_sent);
           HalLedSet ( HAL_LED_4, HAL_LED_MODE_OFF );
-#endif
+          
           break;
 
         case ZDO_STATE_CHANGE: // ZDO has changed the device's network state

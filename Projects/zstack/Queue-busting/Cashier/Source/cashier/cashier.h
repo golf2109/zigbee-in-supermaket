@@ -17,6 +17,7 @@ extern uint8 __xdata ScannerRxIndex;
 extern volatile uint8 have_basket;
 extern volatile uint8 have_pccmd;
 extern volatile uint8 ready_bcast;
+extern volatile uint8 to_com;
 extern uint8* basket_id_sent;
 /*********************************************************************
  *   FUNCTION
