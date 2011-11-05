@@ -19,9 +19,9 @@ public class Read implements Runnable, SerialPortEventListener {
 	static Enumeration portList;
 	static InputStream inputStream;
 	static SerialPort serialPort;
-	Thread readThread;
+	public static Thread readThread;
 	int numBytes;
-	public static byte[] readBuffer = new byte[20];
+	public static byte[] readBuffer = new byte[100];
 
 	/**
 	 * Method declaration
@@ -143,7 +143,6 @@ public class Read implements Runnable, SerialPortEventListener {
 					numBytes = inputStream.read(readBuffer);
 					
 				}
-				System.out.println(new String(readBuffer));
 				MainGui.ShowResult();
 			} catch (IOException e) {
 			}

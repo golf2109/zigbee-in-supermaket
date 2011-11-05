@@ -9,38 +9,66 @@ import jxl.write.WriteException;
 import com.Excel.ReadFile;
 import com.Excel.WriteFile;
 
+
 public class RevData {
+	
 	public static final String DATE_FORMAT_NOW = "yyyy_MM_dd_HH_mm_ss";
 	static String PathDatabase ="c:/temp/Database.xls";
+	public static int NumOfTypeProduct ;
 	
-	public String[] ConvertDataFromBoard(byte[] Data, int length) {
-		int i = 1;
-		int j = 1;
-		String[] Result = new String[1 + length / 8];
-		String temp = new String(Data);
-		Result[0] = temp.substring(0, 1);
-		while (i < length) {
-			Result[j] = temp.substring(i, i + 8);
-			i = i + 8;
-			j++;
+	public String ConvertDataFromBoard(byte[] Data) {
+
+//		ObjectInputStream in;
+//		DataStruct message = null;
+//		ByteArrayInputStream _ByteInputStream =new ByteArrayInputStream(Data);
+//		try {
+//			in = new ObjectInputStream(_ByteInputStream);
+//			try {
+//				message = (DataStruct) in.readObject();
+//			} catch (ClassNotFoundException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			in.close();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		int i = 9;
+		String temp1 = new String(Data);
+		String result = "";
+		result += temp1.substring(0, 8)+Data[8];
+		int length = Data[8];
+		while(i < 14*length+9){
+		
+				result += temp1.substring(i, i+13);
+				int NumOfEachProduct = Data[i+13];
+				result += NumOfEachProduct;
+				i +=14;
 		}
-		return Result;
+
+//		ProductID = new byte[a.byteArrayToInt(NumOfTypeProduct,1,0)][14];
+		return result;
 	}
 
-	public String[] GetDataFromDatabase(String Path, String[] Data, int length) {
-		int i = 1;
+	public String[] GetDataFromDatabase(String Path,String Data,int length) {
+		int i = 9;
 		int j = 1;
 		boolean _inDatabase = false;
-		int count = 0;
+		NumOfTypeProduct = 0;
+		String temp;
 		ReadFile ReadDataBase = new ReadFile();
-		String[] Result = new String[3 * (length - 1) + 1];
-		Result[0] = Data[0];// packet ID
-
-		for (i = 1; i < length; i++) {
+		String[] Result = new String[4 * ((length - 8)/14)+1];
+		Result[0] = Data.substring(0, 8);// packet ID
+		while(i < length) {
+			
+			temp = Data.substring(i,i+13);
+			
+			i += 14;
 			_inDatabase = false;
 			for (j = 2; j < 12; j++) {
 				try {
-					if (ReadDataBase.read(Path, 1, j).equals(Data[i])) {
+					if (ReadDataBase.read(Path, 1, j).equals(temp)) {
 						_inDatabase = true;
 						break;
 					}
@@ -51,18 +79,23 @@ public class RevData {
 			}
 			if (_inDatabase) {
 				try {
-					count++;
-					Result[count] = ReadDataBase.read(Path, 1, j);
-					count++;
-					Result[count] = ReadDataBase.read(Path, 2, j);
-					count++;
-					Result[count] = ReadDataBase.read(Path, 3, j);
+					NumOfTypeProduct++;
+					Result[NumOfTypeProduct] = ReadDataBase.read(Path, 1, j);
+					NumOfTypeProduct++;
+					Result[NumOfTypeProduct] = ReadDataBase.read(Path, 2, j);
+					NumOfTypeProduct++;
+					Result[NumOfTypeProduct] = ReadDataBase.read(Path, 3, j);
+					NumOfTypeProduct++;
+					Result[NumOfTypeProduct] = Data.substring(i-1,i);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
+			
 		}
+//		System.out.println(Result.length);
+//		System.out.println(NumOfTypeProduct);
 		return Result;
 	}
 
@@ -78,29 +111,29 @@ public class RevData {
 	}
 
 	public static void main(String args[]) {
-		byte[] byteArray = new byte[] { 69, 57, 48, 49, 50, 51, 52, 53, 48, 
-				                            57, 49,	50, 51, 52, 53, 54, 55
-		// 69, 69, 69, 69, 69, 69, 69
-		};
+		byte[] byteArray = new byte[] { 69, 
+				                        55, 55, 55, 55, 55, 55, 55, 
+										2,
+										55, 55, 55, 55, 55, 55, 55, 56, 56, 56,56,55, 55, 2,
+										53, 52, 55, 55, 55, 55, 55, 56, 56, 56,56,52, 52, 2
+										};
 		RevData _testGetData = new RevData();
-		String[] _a = _testGetData.ConvertDataFromBoard(byteArray, byteArray.length);
-		
-		
-		String [] _b= _testGetData.GetDataFromDatabase(PathDatabase, _a, _a.length);
-		for(int i=0; i< _b.length;i++){
+		String _a = _testGetData.ConvertDataFromBoard(byteArray);
+		String [] _b= _testGetData.GetDataFromDatabase(PathDatabase, _a, _a.length());
+		for(int i=0; i< NumOfTypeProduct+1;i++){
 		System.out.print(_b[i]+" ");
 		}
-		
-		WriteFile _testWrite = new WriteFile();
-		String Path = GerneralPathToWrite(_b[0]);
-		try {
-			_testWrite.writeExcel(Path, _b, _b.length);
-		} catch (WriteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		
+//		WriteFile _testWrite = new WriteFile();
+//		String Path = GerneralPathToWrite(_b[0]);
+//		try {
+//			_testWrite.writeExcel(Path, _b, NumOfTypeProduct+1,true);
+//		} catch (WriteException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 	}
 }

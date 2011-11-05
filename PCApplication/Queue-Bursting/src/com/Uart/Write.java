@@ -52,7 +52,7 @@ public class Write {
 	 }
 	public static void main(String args[]) {
 		Write test = new Write();
-		test.WriteData("COM1", "hello hp");
+		test.WriteData("COM1", "hoang phuc");
 		System.out.println("done!");
 		
 	}
