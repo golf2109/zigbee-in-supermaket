@@ -47,14 +47,14 @@ public class MainGui extends JFrame {
 	private JScrollPane jScrollPane = null;
 	private JLabel jLabel1IP = null;
 	private JTextField jTextFieldIP = null;
-	static String PathDatabase ="c:/temp/Database.xls";
+	static String PathDatabase ="c:/temp/Database.xls";  //  @jve:decl-index=0:
 	private JCheckBox jCheckBoxUART = null;
 	private JCheckBox jCheckBoxETHERNET = null;
-	private JButton jButtonOK = null;
+	private static JButton jButtonOK = null;
 	private Choice choice = null;
 	private static JList jList = null;
 	private JLabel jLabel1PacketID = null;
-	private JLabel jLabel1PID = null;
+	private static JLabel jLabel1PID = null;
 	private JButton jButtonSendCom = null;
 	private JLabel jLabel1text = null;
 	
@@ -66,9 +66,20 @@ public class MainGui extends JFrame {
 	SerialPort serialPort;
 	Thread readThread;
 	int numBytes;
-	byte[] readBuffer = new byte[20];
-	private JButton jButtonWriteCom1 = null;
+	byte[] readBuffer = new byte[17];
 	private JButton jButtonCheckComPort = null;
+	static int t=0;
+	static String [] Data=new String[500];
+	private static JLabel jLabel1Total = null;
+	private static JLabel jLabel1Money = null;
+	static int total = 0;
+	static int numofline=0;
+	static String [] _c= new String[500];
+	public static String [][] _d= new String[50][500];
+	static int length_d=0;
+	public static int numofpacket=0;
+	public static int[] NumOfNumProduct = new int[500];
+	private JButton jButtonStop = null;
 	/**
 	 * This is the default constructor
 	 */
@@ -113,26 +124,32 @@ public class MainGui extends JFrame {
 	 */
 	private JPanel getJContentPane() {
 		if (jContentPane == null) {
+			jLabel1Money = new JLabel();
+			jLabel1Money.setBounds(new Rectangle(377, 273, 75, 28));
+			jLabel1Money.setText("");
+			jLabel1Total = new JLabel();
+			jLabel1Total.setBounds(new Rectangle(251, 276, 72, 28));
+			jLabel1Total.setText("");
 			jLabel1text = new JLabel();
-			jLabel1text.setBounds(new Rectangle(130, 391, 152, 30));
+			jLabel1text.setBounds(new Rectangle(358, 397, 145, 30));
 			jLabel1text.setText("");
 			jLabel1PID = new JLabel();
-			jLabel1PID.setBounds(new Rectangle(333, 278, 47, 27));
+			jLabel1PID.setBounds(new Rectangle(93, 277, 99, 27));
 			jLabel1PID.setText("");
 			jLabel1PacketID = new JLabel();
-			jLabel1PacketID.setBounds(new Rectangle(265, 276, 57, 32));
+			jLabel1PacketID.setBounds(new Rectangle(4, 272, 57, 32));
 			jLabel1PacketID.setText("Packet Id:");
 			jLabel1IP = new JLabel();
-			jLabel1IP.setBounds(new Rectangle(277, 342, 15, 38));
+			jLabel1IP.setBounds(new Rectangle(5, 353, 15, 38));
 			jLabel1IP.setText("IP:");
 			
 			jLabel1IP.setVisible(false);
-			jLabel = new JLabel();
+			jLabel = new JLabel(); 
 			jLabel.setBounds(new Rectangle(4, 36, 462, 23));
 			jLabel
-					.setText("Stt        Ma Hang                                    Ten Hang                                          Gia Ca");
+					.setText("Index        ProductID                            ProductName                                   Price");
 			jLabelPort = new JLabel();
-			jLabelPort.setBounds(new Rectangle(313, 380, 33, 38));
+			jLabelPort.setBounds(new Rectangle(4, 390, 33, 38));
 			jLabelPort.setText("Port:");
 			jLabelPort.setVisible(false);
 			jContentPane = new JPanel();
@@ -155,8 +172,10 @@ public class MainGui extends JFrame {
 			jContentPane.add(jLabel1PID, null);
 			jContentPane.add(getJButtonSendCom(), null);
 			jContentPane.add(jLabel1text, null);
-			jContentPane.add(getJButtonWriteCom1(), null);
 			jContentPane.add(getJButtonCheckComPort(), null);
+			jContentPane.add(jLabel1Total, null);
+			jContentPane.add(jLabel1Money, null);
+			jContentPane.add(getJButtonStop(), null);
 			setResizable(false);
 		}
 		return jContentPane;
@@ -170,7 +189,7 @@ public class MainGui extends JFrame {
 	private JButton getJButtonConnect() {
 		if (jButtonConnect == null) {
 			jButtonConnect = new JButton();
-			jButtonConnect.setBounds(new Rectangle(393, 344, 99, 35));
+			jButtonConnect.setBounds(new Rectangle(163, 349, 126, 35));
 			jButtonConnect.setText("Connect");
 			jButtonConnect.setVisible(false);
 			jButtonConnect.addActionListener(new java.awt.event.ActionListener() {
@@ -204,7 +223,7 @@ public class MainGui extends JFrame {
 	private JTextField getJTextFieldPort() {
 		if (jTextFieldPort == null) {
 			jTextFieldPort = new JTextField();
-			jTextFieldPort.setBounds(new Rectangle(355, 380, 34, 39));
+			jTextFieldPort.setBounds(new Rectangle(42, 389, 34, 39));
 			jTextFieldPort.setText("123");
 			jTextFieldPort.setVisible(false);
 			jTextFieldPort.addFocusListener(new java.awt.event.FocusListener() {
@@ -228,7 +247,7 @@ public class MainGui extends JFrame {
 			jButtonDisconnect = new JButton();
 			jButtonDisconnect.setText("Disconnect");
 			jButtonDisconnect.setVisible(false);
-			jButtonDisconnect.setBounds(new Rectangle(393, 382, 99, 34));
+			jButtonDisconnect.setBounds(new Rectangle(163, 386, 127, 34));
 			jButtonDisconnect.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
 					jButtonConnect.setEnabled(true);
@@ -250,7 +269,7 @@ public class MainGui extends JFrame {
 	private JButton getJButtonExit() {
 		if (jButtonExit == null) {
 			jButtonExit = new JButton();
-			jButtonExit.setBounds(new Rectangle(38, 375, 81, 41));
+			jButtonExit.setBounds(new Rectangle(377, 365, 81, 29));
 			jButtonExit.setText("Exit");
 			jButtonExit.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -269,13 +288,15 @@ public class MainGui extends JFrame {
 	private JButton getJButtonClear() {
 		if (jButtonClear == null) {
 			jButtonClear = new JButton();
-			jButtonClear.setBounds(new Rectangle(38, 333, 81, 41));
+			jButtonClear.setBounds(new Rectangle(377, 335, 81, 30));
 			jButtonClear.setText("Clear");
 			jButtonClear.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
 					String []data={" "};
 			         jList.setListData(data);
 			         jLabel1PID.setText(null);
+			         jLabel1Total.setText(null);
+			         jLabel1Money.setText(null);
 				}
 			});
 		}
@@ -298,7 +319,7 @@ public class MainGui extends JFrame {
 						System.out.print("Server has connected!\n");
 						PrintWriter out = new PrintWriter(
 								skt.getOutputStream(), true);
-						System.out.print("Sending string: '" + data + "'\n");
+						System.out.print("Sending string: " + data + "'\n");
 						out.print(data);
 						out.close();
 						skt.close();
@@ -356,7 +377,7 @@ public class MainGui extends JFrame {
 	private JTextField getJTextFieldIP() {
 		if (jTextFieldIP == null) {
 			jTextFieldIP = new JTextField();
-			jTextFieldIP.setBounds(new Rectangle(298, 343, 92, 37));
+			jTextFieldIP.setBounds(new Rectangle(26, 353, 113, 37));
 			jTextFieldIP.setText("192.168.13.12");
 			jTextFieldIP.setVisible(false);
 			jTextFieldIP.addFocusListener(new java.awt.event.FocusListener() {
@@ -379,7 +400,7 @@ public class MainGui extends JFrame {
 	private JCheckBox getJCheckBoxUART() {
 		if (jCheckBoxUART == null) {
 			jCheckBoxUART = new JCheckBox();
-			jCheckBoxUART.setBounds(new Rectangle(311, 310, 69, 20));
+			jCheckBoxUART.setBounds(new Rectangle(11, 324, 69, 21));
 			jCheckBoxUART.setText("UART");
 			jCheckBoxUART.setSelected(true);
 			jCheckBoxUART.addMouseListener(new java.awt.event.MouseListener() {
@@ -391,6 +412,8 @@ public class MainGui extends JFrame {
 					jTextFieldPort.setVisible(false);
 					jButtonConnect.setVisible(false);
 					jButtonDisconnect.setVisible(false);
+					jButtonCheckComPort.setVisible(true);
+					jButtonSendCom.setVisible(true);
 					if(jCheckBoxUART.isSelected()){
 						jCheckBoxUART.setSelected(true);
 					}else{
@@ -425,7 +448,7 @@ public class MainGui extends JFrame {
 	private JCheckBox getJCheckBoxETHERNET() {
 		if (jCheckBoxETHERNET == null) {
 			jCheckBoxETHERNET = new JCheckBox();
-			jCheckBoxETHERNET.setBounds(new Rectangle(392, 313, 90, 17));
+			jCheckBoxETHERNET.setBounds(new Rectangle(86, 327, 90, 17));
 			jCheckBoxETHERNET.setText("ETHERNET");
 			jCheckBoxETHERNET.addMouseListener(new java.awt.event.MouseListener() {
 				public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -436,6 +459,8 @@ public class MainGui extends JFrame {
 					jTextFieldPort.setVisible(true);
 					jButtonConnect.setVisible(true);
 					jButtonDisconnect.setVisible(true);
+					jButtonCheckComPort.setVisible(false);
+					jButtonSendCom.setVisible(false);
 					if(jCheckBoxETHERNET.isSelected()){
 						jCheckBoxETHERNET.setSelected(true);
 					}else{
@@ -473,45 +498,31 @@ public class MainGui extends JFrame {
 	private JButton getJButtonOK() {
 		if (jButtonOK == null) {
 			jButtonOK = new JButton();
-			jButtonOK.setBounds(new Rectangle(38, 291, 81, 41));
+			jButtonOK.setBounds(new Rectangle(377, 305, 81, 29));
 			jButtonOK.setText("OK");
+			jButtonOK.setEnabled(false);
 			jButtonOK.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
-					RevData _testGetData = new RevData();
-					byte[] byteArray = new byte[] { 69, 57, 48, 49, 50, 51, 52, 53, 48, 
-                            							57, 49,	50, 51, 52, 53, 54, 55
-													};
-					String[] _a = _testGetData.ConvertDataFromBoard(byteArray, byteArray.length);
-					String[] _b= _testGetData.GetDataFromDatabase(PathDatabase, _a, _a.length);
-					jLabel1PID.setText(_b[0]);
-					String space1="         ";
-					String space2="                                  ";
-					String space3="                                          ";
-					String space4="                                                                                                        ";
-					String __="-----------------------------------------------------------------------------------------------------------------";
-					int t=0,i,total=0;
-					String [] _c= new String[((_b.length-1)/3)+2];
-					for(i=0; i<(_b.length-1)/3; i++){
-						_c[i]= (i+1) + space1+ 
-						       _b[++t]+ space2+ 
-						       _b[++t]+space3+ 
-						       _b[++t];
-						total += Integer.parseInt(_b[t]);
-					}
-					_c[(_b.length-1)/3]=__;
-					_c[(_b.length-1)/3+1]=space1+ "Total: "+space4+ total;
-					jList.setListData(_c);
 					WriteFile _testWrite = new WriteFile();
-					try {
-						String Path = RevData.GerneralPathToWrite(_b[0]);
-						_testWrite.writeExcel(Path, _b, _b.length);
-					} catch (WriteException e1) {
-						// TODO Auto-generated catch block
-						System.out.println("File path error");;
-					} catch (IOException e2) {
-						// TODO Auto-generated catch block
-						e2.printStackTrace();
-					}
+					String Path = RevData.GerneralPathToWrite(_d[0][0]);
+						try {
+							int i=_testWrite.writeExcel(Path);
+						} catch (WriteException e1) {
+							// TODO Auto-generated catch block
+							System.out.println("File path error");;
+						} catch (IOException e2) {
+							// TODO Auto-generated catch block
+							e2.printStackTrace();
+						}
+						jButtonOK.setEnabled(false);
+						total = 0;
+						numofline=0;
+						_c= new String[500];
+						_d= new String[50][500];
+						length_d=0;
+						numofpacket=0;
+						NumOfNumProduct = new int[500];
+						
 				}
 			});
 		}
@@ -526,7 +537,7 @@ public class MainGui extends JFrame {
 	private Choice getChoice() {
 		if (choice == null) {
 			choice = new Choice();
-			choice.setBounds(new Rectangle(310, 345, 71, 38));
+			choice.setBounds(new Rectangle(59, 367, 71, 38));
 			choice.setVisible(true);
 			
 			
@@ -553,8 +564,8 @@ public class MainGui extends JFrame {
 	private JButton getJButtonSendCom() {
 		if (jButtonSendCom == null) {
 			jButtonSendCom = new JButton();
-			jButtonSendCom.setBounds(new Rectangle(154, 337, 147, 32));
-			jButtonSendCom.setText("Recv Data From ");
+			jButtonSendCom.setBounds(new Rectangle(205, 355, 104, 32));
+			jButtonSendCom.setText("Recv Data ");
 			jButtonSendCom.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
 					boolean portFound = false;
@@ -562,7 +573,8 @@ public class MainGui extends JFrame {
 					portList = CommPortIdentifier.getPortIdentifiers();
 
 					while (portList.hasMoreElements()) {
-						jLabel1text.setText("Reading "+ choice.getSelectedItem());
+						jLabel1text.setText("Recv Data From "+ choice.getSelectedItem());
+						choice.setEnabled(false);
 						portId = (CommPortIdentifier) portList.nextElement();
 						if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
 							if (portId.getName().equals(defaultPort)) {
@@ -581,30 +593,53 @@ public class MainGui extends JFrame {
 		return jButtonSendCom;
 	}
      public static void ShowResult(){
-    	 String [] Data = new String [1];
-		 Data[0]= new String(Read.readBuffer);
-		 jList.setListData(Data);
+    	 RevData _testGetData = new RevData();
+			int t=0,i,k=0;
+			String _a = _testGetData.ConvertDataFromBoard(Read.readBuffer);
+			String[] _b = _testGetData.GetDataFromDatabase(PathDatabase, _a, _a.length());
+			jLabel1PID.setText(_b[0]);
+			length_d=0;
+			String space1="         ";
+			String space2="                        ";
+			String space3="                                ";
+			String space4="                                                                                                        ";
+			String __="-----------------------------------------------------------------------------------------------------------------";
+			_c[numofline++] = "Packet ID: "+_b[0];
+			_d[numofpacket][length_d++] =_b[0];
+			for(i=0; i<(_testGetData.NumOfTypeProduct)/4; i++){
+				_d[numofpacket][length_d++] =_b[t+1];
+				_d[numofpacket][length_d++] =_b[t+2];
+				_d[numofpacket][length_d++] =_b[t+3];//for write
+				_d[numofpacket][length_d++] =_b[t+4];//for write
+				
+				_c[numofline++]= (i+1) + space1+ 
+				       _b[++t]+ space2+ 
+				       _b[++t]+" x("+_b[t+2]+")"+space3+ 
+				       _b[++t];
+				
+				total += Integer.parseInt(_b[t])*Integer.parseInt(_b[++t]);
+			}
+			jLabel1Total.setText("Total: ");
+			String _total=new String();
+			_total=total+"";
+			jLabel1Money.setText(_total);
+			jList.setListData(_c);
+			NumOfNumProduct[numofpacket++]=_testGetData.NumOfTypeProduct;
+			jButtonOK.setEnabled(true);
+//			for(i=0;i<numofpacket;i++){
+//				
+//				for(int j=0;j<NumOfNumProduct[i]+1;j++)
+//				{					
+//					System.out.print(_d[i][j]+"  ");
+//				}
+//				System.out.println();
+//			}
+//			System.out.println();
+			
+			
+			
+	//	 jButtonOK.doClick();
      }
-	/**
-	 * This method initializes jButtonWriteCom1	
-	 * 	
-	 * @return javax.swing.JButton	
-	 */
-	private JButton getJButtonWriteCom1() {
-		if (jButtonWriteCom1 == null) {
-			jButtonWriteCom1 = new JButton();
-			jButtonWriteCom1.setBounds(new Rectangle(255, 393, 132, 28));
-			jButtonWriteCom1.setText("Just for my test");
-			jButtonWriteCom1.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					Write test= new Write();
-					test.WriteData("COM1","hello hp");
-				}
-			});
-		}
-		return jButtonWriteCom1;
-	}
-
 	/**
 	 * This method initializes jButtonCheckComPort	
 	 * 	
@@ -613,7 +648,7 @@ public class MainGui extends JFrame {
 	private JButton getJButtonCheckComPort() {
 		if (jButtonCheckComPort == null) {
 			jButtonCheckComPort = new JButton();
-			jButtonCheckComPort.setBounds(new Rectangle(154, 305, 103, 29));
+			jButtonCheckComPort.setBounds(new Rectangle(205, 322, 103, 29));
 			jButtonCheckComPort.setText("CheckPort");
 			jButtonCheckComPort.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -623,7 +658,6 @@ public class MainGui extends JFrame {
 					while (port_list.hasMoreElements())
 					{
 						CommPortIdentifier port_id = (CommPortIdentifier)port_list.nextElement();
-					
 						if (port_id.getPortType() == CommPortIdentifier.PORT_SERIAL)
 							{
 								choice.add(port_id.getName());
@@ -632,11 +666,30 @@ public class MainGui extends JFrame {
 								{
 									System.out.println ("Parallel port: " + port_id.getName());
 								}
-						}
+					}
+					
 				}
 			});
 		}
 		return jButtonCheckComPort;
+	}
+
+	/**
+	 * This method initializes jButtonStop	
+	 * 	
+	 * @return javax.swing.JButton	
+	 */
+	private JButton getJButtonStop() {
+		if (jButtonStop == null) {
+			jButtonStop = new JButton();
+			jButtonStop.setBounds(new Rectangle(206, 392, 101, 32));
+			jButtonStop.setText("Stop Recv");
+			jButtonStop.addActionListener(new java.awt.event.ActionListener() {
+				public void actionPerformed(java.awt.event.ActionEvent e) {
+				}
+			});
+		}
+		return jButtonStop;
 	}
 
 	public static void main(String arg[]) {

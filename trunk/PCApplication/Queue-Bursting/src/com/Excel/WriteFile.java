@@ -1,8 +1,12 @@
 package com.Excel;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Locale;
+
+import com.Gui.MainGui;
 
 import jxl.CellView;
 import jxl.Workbook;
@@ -17,32 +21,42 @@ import jxl.write.WritableWorkbook;
 import jxl.write.WriteException;
 import jxl.write.biff.RowsExceededException;
 
+
+
 public class WriteFile {
 	private WritableCellFormat timesBoldUnderline;
 	private WritableCellFormat times;
 	private String inputFile;
-	String Label1[] = { "Index", "IDProduct", "NameProduct", "PRICE" };
+	String Label1[] = { "Index", "IDProduct", "NameProduct", "PRICE", "NumOfProduct" };
 	String Label2[] = { "IDCustommer", "IDProduct" };
-
-	public void writeExcel(String Path, String[] Data, int length)
+	int row = 0;
+	int total = 0;
+	int num =0;
+	boolean done=false; 
+	int i=0;
+	public int  writeExcel(String Path)
 			throws IOException, WriteException {
-		File file = new File(Path);
-		// Workbook workbook = application.createWorkbook("Custom title");
-		WorkbookSettings wbSettings = new WorkbookSettings();
-
-		wbSettings.setLocale(new Locale("en", "EN"));
-
-		WritableWorkbook workbook = Workbook.createWorkbook(file, wbSettings);
-		workbook.createSheet("List", 0);// first create sheet
-		WritableSheet excelSheet = workbook.getSheet(0);
-		createLabel(Path,excelSheet);
-		createContent(excelSheet, Data, length);
-
-		workbook.write();
-		workbook.close();
+			File file = new File(Path);
+			WorkbookSettings wbSettings = new WorkbookSettings();
+			wbSettings.setLocale(new Locale("en", "EN"));
+			WritableWorkbook workbook = Workbook.createWorkbook(file, wbSettings);
+			workbook.createSheet("ListProduct", 0);// first create sheet
+			WritableSheet excelSheet = workbook.getSheet("ListProduct");
+			for(i=0;i<MainGui.numofpacket;i++){
+//				for(int j=0;j<MainGui.NumOfNumProduct[i]+1;j++)
+//				{					
+//					System.out.print(MainGui._d[i][j]+"  ");
+//				}
+				if(i==0) createLabel(Path,excelSheet,true);
+				else  createLabel(Path,excelSheet,false);
+				createContent(excelSheet, MainGui._d[i], MainGui.NumOfNumProduct[i]+1);
+			}
+			workbook.write();
+			workbook.close();
+			return 0;
 	}
 
-	private void createLabel(String Path,WritableSheet sheet) throws WriteException {
+	private void createLabel(String Path,WritableSheet sheet, boolean first) throws WriteException {
 		// Lets create a times font
 		WritableFont times10pt = new WritableFont(WritableFont.TIMES, 10);
 		// Define the cell format
@@ -63,34 +77,56 @@ public class WriteFile {
 		cv.setFormat(timesBoldUnderline);
 		cv.setAutosize(true);
 		// Write a few headers
-		int i;
-		addCaption(sheet, 0, 0, Path.substring(8,Path.length()-4));
-		for (i = 0; i < 4; i++) {
-			addCaption(sheet, i, 1, Label1[i]);
+		
+		addCaption(sheet, 0, row++, MainGui._d[i][0]);
+		if(first)
+		for (int i = 0; i < 5; i++) {
+			addCaption(sheet, i, row, Label1[i]);
+		}
+		row++;
+	}
+	void WriteTotal(WritableSheet sheet){
+		try {
+			addNumber(sheet, 3, row+1, total);
+		} catch (RowsExceededException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (WriteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
-
 	private void createContent(WritableSheet sheet, String[] Data, int length)
 			throws WriteException, RowsExceededException {
 		int col;
-		int row = 2;
-		int i=1;
-		int total=0;
-		String Temp;
-		while (i < length-1) {
-			addNumber(sheet, 0, row, row-1);
-			for (col = 1; col <= 3; col++) {
-				addLabel(sheet, col, row, Data[i]);
-				if(col==3&&Data[i]!=null)
-				total+=Integer.parseInt(Data[i]);
-				i++;
+		int i1=1;
+		int t=1;
+		int _total =0;
+		while (i1 < length-1) {
+			
+			addNumber(sheet, 0, row,t++ );
+			for (col = 1; col <= 4; col++) {
+				addLabel(sheet, col, row, Data[i1]);
+				if(col==3&&Data[i1]!=null)
+				_total += Integer.parseInt(Data[i1])*Integer.parseInt(Data[i1+1]);
+				
+				i1++;
 			}
 			row++;
 			col = 0;
-		}
-		addLabel(sheet, 0, row+1, "Total");
-		addLabel(sheet, 2, row+1, (row-2)+" Product");
-		addNumber(sheet, 3, row+1, total);
+		}	
+			total += _total;
+			addLabel(sheet, 1, row, "Total");
+			addLabel(sheet, 2, row, t-1 +" Product");
+			addNumber(sheet, 3, row, _total);
+			num +=t-1;
+			row++;
+			if(i == MainGui.numofpacket-1){
+				addLabel(sheet, 1, row+1, "Total");
+				addLabel(sheet, 2, row+1, num +" Product");
+				addNumber(sheet, 3, row+1, total);
+			}
+	
 
 		// StringBuffer buf = new StringBuffer();
 		// buf.append("SUM(A2:A10)");
