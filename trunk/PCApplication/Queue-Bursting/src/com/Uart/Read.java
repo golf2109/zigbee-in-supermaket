@@ -12,7 +12,7 @@ import javax.comm.SerialPortEvent;
 import javax.comm.SerialPortEventListener;
 import javax.comm.UnsupportedCommOperationException;
 
-import com.Gui.MainGui1;
+import com.Gui.MainGui;
 
 public class Read implements Runnable, SerialPortEventListener {
 	static CommPortIdentifier portId;
@@ -21,7 +21,7 @@ public class Read implements Runnable, SerialPortEventListener {
 	public static SerialPort serialPort;
 	public Thread readThread;
 	int numBytes;
-	public static byte[] readBuffer = new byte[100];
+	public static byte[] readBuffer = new byte[10000];
 	public static boolean bError = false;
 	public static boolean bStop = false;
 
@@ -67,7 +67,7 @@ public class Read implements Runnable, SerialPortEventListener {
 	{
 		bError = false;
 		try {
-			serialPort = (SerialPort) portId.open("RecvData", 2000);
+			serialPort = (SerialPort) portId.open("RecvData", 1000000);
 		} catch (PortInUseException e) {
 			System.out.println("something error");//portId.getName() + " is busy"+ " "+ portId.getCurrentOwner());
 			bError = true; 
@@ -110,7 +110,7 @@ public class Read implements Runnable, SerialPortEventListener {
 	 */
 	public void run() {
 			try {
-				Thread.sleep(20000);
+				Thread.sleep(20);
 			} catch (InterruptedException e) {
 				System.out.println("Exception run");
 				
@@ -156,7 +156,7 @@ public class Read implements Runnable, SerialPortEventListener {
 				}
 				String _sIdentify = new String(readBuffer).substring(0, 1);
 				if (_sIdentify.equals("#")){ //readBuffer is Packet ID and Product ID need to calc money
-					MainGui1.ProcessData();
+					MainGui.ProcessData();
 				}else if (_sIdentify =="+"){//readBuffer is Product ID, need to add more in PacketID
 					
 				}else if (_sIdentify =="-"){//readBuffer is Product ID, need to remove in PacketID

@@ -17,7 +17,7 @@ import jxl.write.WritableWorkbook;
 import jxl.write.WriteException;
 import jxl.write.biff.RowsExceededException;
 
-import com.Gui.MainGui1;
+import com.Gui.MainGui;
 
 
 
@@ -38,10 +38,10 @@ public class WriteFile {
 			WritableWorkbook workbook = Workbook.createWorkbook(file, wbSettings);
 			workbook.createSheet("ListProduct", 0);// first create sheet
 			WritableSheet excelSheet = workbook.getSheet("ListProduct");
-			for(i = 0; i < MainGui1.numofpacket; i++){
+			for(i = 0; i < MainGui.numofpacket; i++){
 				if(i==0) createLabel(_sPath,excelSheet,true);
 				else  createLabel(_sPath,excelSheet,false);
-				createContent(excelSheet, MainGui1._d[i], MainGui1.NumOfNumProduct[i]+1);
+				createContent(excelSheet, MainGui._d[i], MainGui.NumOfNumProduct[i]+1);
 			}
 			workbook.write();
 			workbook.close();
@@ -69,7 +69,7 @@ public class WriteFile {
 		cv.setAutosize(true);
 		// Write a few headers
 		
-		addCaption(sheet, 0, row++, MainGui1._d[i][0]); // Write Packet ID
+		addCaption(sheet, 0, row++, MainGui._d[i][0]); // Write Packet ID
 		if(first)
 		for (int i = 0; i < 5; i++) {
 			addCaption(sheet, i, row, Label1[i]);
@@ -100,7 +100,7 @@ public class WriteFile {
 		addNumber(sheet, 3, row, _total);
 		num +=t-1;
 		row++;
-		if(i == MainGui1.numofpacket-1){
+		if(i == MainGui.numofpacket-1){
 			addLabel(sheet, 1, row+1, "Total");
 			addLabel(sheet, 2, row+1, num +" Product");
 			addNumber(sheet, 3, row+1, total);
