@@ -9,19 +9,19 @@ import jxl.Workbook;
 import jxl.read.biff.BiffException;
 
 public class ReadFile {
-	public String read(String inputFile, int col, int row) throws IOException  {
-		File inputWorkbook = new File(inputFile);
-		Workbook w=null;
+	public String ReadExcel(String _InputFile, int _Col, int _Row) throws IOException  {
+		File _fInputWorkbook = new File(_InputFile);
+		Workbook _w=null;
 			try {
-				w = Workbook.getWorkbook(inputWorkbook);
+				_w = Workbook.getWorkbook(_fInputWorkbook);
 			} catch (BiffException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			// Get the first sheet
-			Sheet sheet = w.getSheet(0);
+			Sheet sheet = _w.getSheet(0);
 			// Loop over first 10 column and lines
-			Cell cell = sheet.getCell(col, row);
-			return cell.getContents();
+			Cell _cCell = sheet.getCell(_Col, _Row);
+			return _cCell.getContents();
 	}
 }
