@@ -12,16 +12,18 @@ import javax.comm.SerialPortEvent;
 import javax.comm.SerialPortEventListener;
 import javax.comm.UnsupportedCommOperationException;
 
-import com.Gui.MainGui;
+import com.Gui.MainGui1;
 
 public class Read implements Runnable, SerialPortEventListener {
 	static CommPortIdentifier portId;
 	static Enumeration portList;
-	static InputStream inputStream;
-	static SerialPort serialPort;
-	public static Thread readThread;
+	public InputStream inputStream;
+	public static SerialPort serialPort;
+	public Thread readThread;
 	int numBytes;
 	public static byte[] readBuffer = new byte[100];
+	public static boolean bError = false;
+	public static boolean bStop = false;
 
 	/**
 	 * Method declaration
@@ -60,37 +62,44 @@ public class Read implements Runnable, SerialPortEventListener {
 	 * 
 	 * @see
 	 */
-//	public Read(){
-//		
-//	}
+
 	public Read(CommPortIdentifier portId)
 	{
+		bError = false;
 		try {
 			serialPort = (SerialPort) portId.open("RecvData", 2000);
 		} catch (PortInUseException e) {
+			System.out.println("something error");//portId.getName() + " is busy"+ " "+ portId.getCurrentOwner());
+			bError = true; 
 		}
-
-		try {
-			inputStream = serialPort.getInputStream();
-		} catch (IOException e) {
+		if(!bError){
+			try {
+				inputStream = serialPort.getInputStream();
+			} catch (IOException e) {
+				bError = true; 
+			}
+			if(!bError){
+				try {
+					serialPort.addEventListener(this);
+				} catch (TooManyListenersException e) {
+					bError = true; 
+				}
+				if(!bError){
+					serialPort.notifyOnDataAvailable(true);
+					try {
+						serialPort.setSerialPortParams(9600, SerialPort.DATABITS_8,
+								SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+					} catch (UnsupportedCommOperationException e) {
+						bError = true; 
+					}
+					if(!bError){
+						readThread = new Thread(this);
+						readThread.start();
+					}
+				}
+			}
 		}
-
-		try {
-			serialPort.addEventListener(this);
-		} catch (TooManyListenersException e) {
-		}
-
-		serialPort.notifyOnDataAvailable(true);
-
-		try {
-			serialPort.setSerialPortParams(9600, SerialPort.DATABITS_8,
-					SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-		} catch (UnsupportedCommOperationException e) {
-		}
-
-		readThread = new Thread(this);
-
-		readThread.start();
+		
 	}
 
 	/**
@@ -100,10 +109,12 @@ public class Read implements Runnable, SerialPortEventListener {
 	 * @see
 	 */
 	public void run() {
-		try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
-		}
+			try {
+				Thread.sleep(20000);
+			} catch (InterruptedException e) {
+				System.out.println("Exception run");
+				
+			}
 	}
 
 	/**
@@ -143,7 +154,16 @@ public class Read implements Runnable, SerialPortEventListener {
 					numBytes = inputStream.read(readBuffer);
 					
 				}
-				MainGui.ShowResult();
+				String _sIdentify = new String(readBuffer).substring(0, 1);
+				if (_sIdentify.equals("#")){ //readBuffer is Packet ID and Product ID need to calc money
+					MainGui1.ProcessData();
+				}else if (_sIdentify =="+"){//readBuffer is Product ID, need to add more in PacketID
+					
+				}else if (_sIdentify =="-"){//readBuffer is Product ID, need to remove in PacketID
+				
+				}
+				
+					
 			} catch (IOException e) {
 			}
 
