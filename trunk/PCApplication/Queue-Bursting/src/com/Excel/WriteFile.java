@@ -82,7 +82,8 @@ public class WriteFile {
 		int i1=1;
 		int t=1;
 		int _total =0;
-		while (i1 < length-1) {
+		System.out.println(length);
+		while (i1 < length) {
 			addNumber(sheet, 0, row,t++ ); //index
 			for (col = 1; col <= 4; col++) {
 				addLabel(sheet, col, row, Data[i1]);

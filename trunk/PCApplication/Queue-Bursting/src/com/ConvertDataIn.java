@@ -18,21 +18,26 @@ public class ConvertDataIn {
 	 * @param _bDataIn : byte array data incoming from board EB through COM port
 	 * return Data which was converted as String
 	 */
-	public String ConvertDataFromBoard(byte[] _bDataIn) {
+	public String ConvertDataFromBoard(byte[] _bDataIn, int _bType) {
 
 		int i = 9;
 		String _sDataIn = new String(_bDataIn);
 		String _sDataOut = "";
-		
-		_sDataOut += _sDataIn.substring(0, 8)+ _bDataIn[8]; //Get Packet Id and Number Of Tpye Product
-		
-		int _iNumOfTypeProduct = _bDataIn[8];
-		int _iNumOfEachProduct;
-		while(i < 14*_iNumOfTypeProduct + 9){
-			_sDataOut += _sDataIn.substring(i, i+13);
-			_iNumOfEachProduct = _bDataIn[i+13];
-			_sDataOut += _iNumOfEachProduct;
-			i +=14;
+		if (_bType == 0){
+			_sDataOut += _sDataIn.substring(0, 8)+ _bDataIn[8]; //Get Packet Id and Number Of Tpye Product
+			
+			int _iNumOfTypeProduct = _bDataIn[8];
+			int _iNumOfEachProduct;
+			while(i < 14*_iNumOfTypeProduct + 9){
+				_sDataOut += _sDataIn.substring(i, i+13);
+				_iNumOfEachProduct = _bDataIn[i+13];
+				_sDataOut += _iNumOfEachProduct;
+				i +=14;
+			}
+			
+		}else{// add and remove
+			_sDataOut = _sDataIn.substring(0, 14)+_bDataIn[14];
+			System.out.println(_sDataOut);
 		}
 		return _sDataOut;
 	}
@@ -43,25 +48,66 @@ public class ConvertDataIn {
 	 * @param _sDataIn : String Data return by ConvertDataFromBoard()
 	 * return Array of String with all infomation of all product of packet
 	 */
-	public String[] GetDataFromDatabase(String _Path, String _sDataIn) {
+	public String[] GetDataFromDatabase(String _Path, String _sDataIn, int _iType) {
 		int i = 9;
-		int j = 1;
+		int j = 2;
 		boolean _inDatabase = false;
 		iNumOfTypeProduct = 0;
 		String _sTemp;
 		ReadFile _cReadDataBase = new ReadFile();
-		String[] _saDataOut = new String[4 * ((_sDataIn.length() - 8)/14)+1];
-		_saDataOut[0] = _sDataIn.substring(0, 8); // packet ID
-		while(i < _sDataIn.length()) {
-			_sTemp = _sDataIn.substring(i,i+13);
-			i += 14;
-			_inDatabase = false;
-			for (j = 2; j < 12; j++) { // Check Database
-				try {
-					if (_cReadDataBase.ReadExcel(_Path, 1, j).equals(_sTemp)) {
-						_inDatabase = true;
-						break;
+		String[] _saDataOut;
+		if(_iType == 0){
+			_saDataOut = new String[4 * ((_sDataIn.length() - 8)/14)+1];
+			_saDataOut[0] = _sDataIn.substring(0, 8); // packet ID
+			while(i < _sDataIn.length()) {
+				_sTemp = _sDataIn.substring(i,i+13);
+				i += 14;
+				_inDatabase = false;
+				
+					for (j = 2; j < 14; j++) { // Check Database
+						try {
+							
+						if (_cReadDataBase.ReadExcel(_Path, 1, j).equals(_sTemp)) {
+							_inDatabase = true;
+							break;
+						}
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							System.out.println("Can't File " + _Path);
+						}
 					}
+				
+				if (_inDatabase) {
+					try {
+						_saDataOut[++iNumOfTypeProduct] = _cReadDataBase.ReadExcel(_Path, 1, j);
+						_saDataOut[++iNumOfTypeProduct] = _cReadDataBase.ReadExcel(_Path, 2, j);
+						_saDataOut[++iNumOfTypeProduct] = _cReadDataBase.ReadExcel(_Path, 3, j);
+						_saDataOut[++iNumOfTypeProduct] = _sDataIn.substring(i-1,i);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				} else{ //Product ID isn't exist in database, something error
+//					saProductIDError[iNumOfProductIDError] = _sTemp; 
+//					iNumOfProductIDError++;
+					_saDataOut[++iNumOfTypeProduct]=_sTemp;
+					_saDataOut[++iNumOfTypeProduct]="Not found ";
+					_saDataOut[++iNumOfTypeProduct]="0";
+					_saDataOut[++iNumOfTypeProduct] = _sDataIn.substring(i-1,i);;				
+					
+				}					
+				}
+			}else{////////////////////////////////////////////////
+			_saDataOut = new String[5];
+			_inDatabase = false;
+			_sTemp = _sDataIn.substring(1,14);
+			for (j = 2; j < 14; j++) { // Check Database
+				try {
+					
+				if (_cReadDataBase.ReadExcel(_Path, 1, j).equals(_sTemp)) {
+					_inDatabase = true;
+					break;
+				}
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					System.out.println("Can't File " + _Path);
@@ -69,22 +115,22 @@ public class ConvertDataIn {
 			}
 			if (_inDatabase) {
 				try {
-					iNumOfTypeProduct++;
-					_saDataOut[iNumOfTypeProduct] = _cReadDataBase.ReadExcel(_Path, 1, j);
-					iNumOfTypeProduct++;
-					_saDataOut[iNumOfTypeProduct] = _cReadDataBase.ReadExcel(_Path, 2, j);
-					iNumOfTypeProduct++;
-					_saDataOut[iNumOfTypeProduct] = _cReadDataBase.ReadExcel(_Path, 3, j);
-					iNumOfTypeProduct++;
-					_saDataOut[iNumOfTypeProduct] = _sDataIn.substring(i-1,i);
+					if(_sDataIn.substring(0,1).equals("+"))
+						_saDataOut[0] = "Add more product";
+					else
+						_saDataOut[0] = "Remove product";
+					
+					_saDataOut[1] = _cReadDataBase.ReadExcel(_Path, 1, j);
+					_saDataOut[2] = _cReadDataBase.ReadExcel(_Path, 2, j);
+					_saDataOut[3] = _cReadDataBase.ReadExcel(_Path, 3, j);
+					_saDataOut[4] = _sDataIn.substring(14,15);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			} else{ //Product ID isn't exist in database, something error
-				saProductIDError[iNumOfProductIDError] = _sTemp; 
-				iNumOfProductIDError++;
-			}
+			}else
+				_saDataOut[0] = "Not Found";
+			    _saDataOut[1]=_sDataIn.substring(1,14);
 			
 		}
 		return _saDataOut;

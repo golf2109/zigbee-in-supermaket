@@ -67,7 +67,7 @@ public class Read implements Runnable, SerialPortEventListener {
 	{
 		bError = false;
 		try {
-			serialPort = (SerialPort) portId.open("RecvData", 1000000);
+			serialPort = (SerialPort) portId.open("RecvData", 2000);
 		} catch (PortInUseException e) {
 			System.out.println("something error");//portId.getName() + " is busy"+ " "+ portId.getCurrentOwner());
 			bError = true; 
@@ -156,11 +156,9 @@ public class Read implements Runnable, SerialPortEventListener {
 				}
 				String _sIdentify = new String(readBuffer).substring(0, 1);
 				if (_sIdentify.equals("#")){ //readBuffer is Packet ID and Product ID need to calc money
-					MainGui.ProcessData();
-				}else if (_sIdentify =="+"){//readBuffer is Product ID, need to add more in PacketID
-					
-				}else if (_sIdentify =="-"){//readBuffer is Product ID, need to remove in PacketID
-				
+					MainGui.ProcessData(0);
+				}else {//readBuffer is Product ID, need to add more in PacketID
+					MainGui.ProcessData(1);
 				}
 				
 					

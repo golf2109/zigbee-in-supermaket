@@ -89,8 +89,6 @@ public class MainGui extends JFrame {
 	Read reader =null;
 	public static ErrorGui StatusGui = null;
 	public static Help HelpGui = null;
-	private static JButton jButtonAdd = null;
-	private static JButton jButtonRemove = null;
 	private JTextPane jTextPaneHcmut = null;
 	private JTextPane jTextPaneQueueBrusting = null;
 	private JTextPane jTextPaneDatalogic = null;
@@ -199,8 +197,6 @@ public class MainGui extends JFrame {
 			jContentPane.add(jLabel1Total, null);
 			jContentPane.add(jLabel1Money, null);
 			jContentPane.add(getJButtonStop(), null);
-			jContentPane.add(getJButtonAdd(), null);
-			jContentPane.add(getJButtonRemove(), null);
 			jContentPane.add(getJTextPaneHcmut(), null);
 			jContentPane.add(getJTextPaneQueueBrusting(), null);
 			jContentPane.add(getJTextPaneDatalogic(), null);
@@ -299,7 +295,7 @@ public class MainGui extends JFrame {
 	private JButton getJButtonExit() {
 		if (jButtonExit == null) {
 			jButtonExit = new JButton();
-			jButtonExit.setBounds(new Rectangle(295, 478, 92, 29));
+			jButtonExit.setBounds(new Rectangle(370, 430, 110, 35));
 			jButtonExit.setText("Exit");
 			jButtonExit.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -318,7 +314,7 @@ public class MainGui extends JFrame {
 	private JButton getJButtonClear() {
 		if (jButtonClear == null) {
 			jButtonClear = new JButton();
-			jButtonClear.setBounds(new Rectangle(426, 385, 105, 28));
+			jButtonClear.setBounds(new Rectangle(426, 385, 105, 37));
 			jButtonClear.setText("Clear");
 			jButtonClear.setEnabled(false);
 			jButtonClear.addActionListener(new java.awt.event.ActionListener() {
@@ -330,9 +326,8 @@ public class MainGui extends JFrame {
 			         jLabel1Money.setText(null);
 			         jLabel1PacketID.setText(null);
 			         jButtonOK.setEnabled(true);
-			         jButtonAdd.setEnabled(false);
 			         jButtonOK.setEnabled(false);
-			         jButtonRemove.setEnabled(false);
+
 			         
 					 total = 0;
 					 numofline=0;
@@ -459,6 +454,7 @@ public class MainGui extends JFrame {
 					jButtonCheckComPort.setVisible(true);
 					jButtonGetData.setVisible(true);
 					jButtonStop.setVisible(true);
+					
 					if(jCheckBoxUART.isSelected()){
 						jCheckBoxUART.setSelected(true);
 					}else{
@@ -507,6 +503,9 @@ public class MainGui extends JFrame {
 					jButtonCheckComPort.setVisible(false);
 					jButtonGetData.setVisible(false);
 					jButtonStop.setVisible(false);
+					jButtonStop.doClick();
+					jButtonOK.setEnabled(false);
+					jButtonClear.setEnabled(false);
 					if(jCheckBoxETHERNET.isSelected()){
 						jCheckBoxETHERNET.setSelected(true);
 					}else{
@@ -544,7 +543,8 @@ public class MainGui extends JFrame {
 	private JButton getJButtonOK() {
 		if (jButtonOK == null) {
 			jButtonOK = new JButton();
-			jButtonOK.setBounds(new Rectangle(296, 385, 116, 29));
+			jButtonOK.setBounds(new Rectangle(296, 385, 116, 37));
+			                             //     (295, 200, 100, 29)
 			jButtonOK.setText("OK");
 			jButtonOK.setEnabled(false);
 			jButtonOK.addActionListener(new java.awt.event.ActionListener() {
@@ -656,50 +656,96 @@ public class MainGui extends JFrame {
 		}
 		return jButtonGetData;
 	}
-     public static void ProcessData(){
+     public static void ProcessData(int _iType){
     	 	ConvertDataIn _testGetData = new ConvertDataIn();
 			int t=0;
 			int i;
 			int _total = 0;
-			String _a = _testGetData.ConvertDataFromBoard(Read.readBuffer);
-			String[] _b = _testGetData.GetDataFromDatabase(PathDatabase, _a);
-			jLabel1PID.setText(_b[0]);
-			length_d=0;
+			String _a;
+			String[] _b;
 			String _space1="         ";
 			String _space2="                        ";
-			String _space3="                                     ";
-			_c[numofline++] = "Packet ID:  "+_b[0];
-			_d[numofpacket][length_d++] =_b[0];
-			for(i=0; i<(_testGetData.iNumOfTypeProduct)/4; i++){
-				_d[numofpacket][length_d++] =_b[t+1];
-				_d[numofpacket][length_d++] =_b[t+2];
-				_d[numofpacket][length_d++] =_b[t+3];
-				_d[numofpacket][length_d++] =_b[t+4];//for write
+			String _space3="                                    ";
+			String _space4;
+			String temp1;
+			if(_iType ==0){
+				_a = _testGetData.ConvertDataFromBoard(Read.readBuffer, 0);
+				_b = _testGetData.GetDataFromDatabase(PathDatabase, _a, 0);
+				jLabel1PID.setText(_b[0]);
+				length_d=0;
+				_c[numofline++] = "Packet ID:  "+_b[0];
+				_d[numofpacket][length_d++] =_b[0];
+				for(i=0; i<(_testGetData.iNumOfTypeProduct)/4; i++){
+					_d[numofpacket][length_d++] =_b[t+1];
+					_d[numofpacket][length_d++] =_b[t+2];
+					_d[numofpacket][length_d++] =_b[t+3];
+					_d[numofpacket][length_d++] =_b[t+4];//for write
+					
+					_c[numofline++]= (i+1) + _space1+  _b[++t]+ _space2;
+					temp1= _b[++t]+"  x("+_b[t+2]+")";
+//					if(temp1.length()==15){
+//						temp1= _b[t]+" x("+_b[t+2]+")";
+//					}else if(temp1.length()==16){
+//						temp1= _b[t]+"x("+_b[t+2]+")";						
+//					}
+					_c[numofline-1] += temp1+ _space3+ _b[++t];
+					_total += Integer.parseInt(_b[t])*Integer.parseInt(_b[++t]); // total price each packet
+					
+					
+				}
+				total += _total; // total price all packet
+				_c[numofline++]= "----------------------------------------------------------------------------------------------------------------";
+				_c[numofline++]=_space2+ "              Total:                                                                                 "+_total;
 				
-				_c[numofline++]= (i+1) + _space1+ 
-				       			 _b[++t]+ _space2+ 
-				       			 _b[++t]+" x("+_b[t+2]+")"+ _space3+ 
-				       			 _b[++t]; //for print out
-				_total += Integer.parseInt(_b[t])*Integer.parseInt(_b[++t]); // total price each packet
+				jLabel1Total.setText("Total: ");
+				String _sTotal=new String();
+				_sTotal=total+"";
+				jLabel1Money.setText(_sTotal);
+				jList.setListData(_c);
+				NumOfNumProduct[numofpacket++]=_testGetData.iNumOfTypeProduct;
+				jButtonOK.setEnabled(true);
+				jLabel1PacketID.setVisible(true);
+		        jButtonOK.setEnabled(true);
+		        jButtonClear.setEnabled(true);
+			}else{
+				_a = _testGetData.ConvertDataFromBoard(Read.readBuffer, 1);
+				if(_a.substring(0, 1).equals("+")||_a.substring(0, 1).equals("-")){
+				_b = _testGetData.GetDataFromDatabase(PathDatabase, _a, 1);
+				jLabel1PID.setText(_b[0]);
+				length_d=0;
+				_c[numofline++] =_b[0];
+				_c[numofline++]= " " + _space1+  _b[1]+ _space2;
+				if(_b[0].equals("Not Found"))
+				{
+					System.out.println("Not in database");
+				}else{
+				_d[numofpacket][0] =_b[0];
+				_d[numofpacket][1] =_b[1];
+				_d[numofpacket][2] =_b[2];
+				_d[numofpacket][3] =_b[3];
+				_d[numofpacket][4] =_b[4];//for write
+				System.out.println(_d[numofpacket][2]+" "+numofpacket);
+				String temp2= _b[2]+" x("+_b[4]+")";
+				//String _space4 = _space3.substring(0, _space3.length()-temp1.length()+14);
+				_c[numofline-1] += temp2+ _space3+ _b[3]; 
 				
+				_total += Integer.parseInt(_b[4])*Integer.parseInt(_b[3]); // total price each packet
+				if(_b[0].equals("Add more product"))
+					total += _total; // total price all packet
+				else total -= _total; // total price all packet
+				_c[numofline++]= "----------------------------------------------------------------------------------------------------------------";
 				
+				jLabel1Total.setText("Total: ");
+				String _sTotal=new String();
+				_sTotal=total+"";
+				jLabel1Money.setText(_sTotal);
+				
+				NumOfNumProduct[numofpacket++]=	1;
+				}
+				
+				jList.setListData(_c);
+				}
 			}
-			total += _total; // total price all packet
-			_c[numofline++]= "----------------------------------------------------------------------------------------------------------------";
-			_c[numofline++]=_space2+ "              Total:                                                                                 "+_total;
-			
-			jLabel1Total.setText("Total: ");
-			String _sTotal=new String();
-			_sTotal=total+"";
-			jLabel1Money.setText(_sTotal);
-			jList.setListData(_c);
-			NumOfNumProduct[numofpacket++]=_testGetData.iNumOfTypeProduct;
-			jButtonOK.setEnabled(true);
-			jLabel1PacketID.setVisible(true);
-			jButtonAdd.setEnabled(true);
-	        jButtonOK.setEnabled(true);
-	        jButtonRemove.setEnabled(true);
-	        jButtonClear.setEnabled(true);
      }
 	/**
 	 * This method initializes jButtonCheckComPort	
@@ -775,51 +821,9 @@ public class MainGui extends JFrame {
 		return jButtonStop;
 	}
 
-	/**
-	 * This method initializes jButtonAdd	
-	 * 	
-	 * @return javax.swing.JButton	
-	 */
-	private JButton getJButtonAdd() {
-		if (jButtonAdd == null) {
-			jButtonAdd = new JButton();
-			jButtonAdd.setBounds(new Rectangle(296, 417, 116, 26));
-			jButtonAdd.setText("Add");
-			jButtonAdd.setEnabled(false);
-			jButtonAdd.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					jButtonRemove.setEnabled(true);
-					jButtonAdd.setEnabled(false);
-				}
-			});
-		}
-		return jButtonAdd;
-	}
+	
 
-	/**
-	 * This method initializes jButtonRemove	
-	 * 	
-	 * @return javax.swing.JButton	
-	 */
-	private JButton getJButtonRemove() {
-		if (jButtonRemove == null) {
-			jButtonRemove = new JButton();
-			jButtonRemove.setBounds(new Rectangle(425, 417, 106, 26));
-			jButtonRemove.setText("Remove");
-			jButtonRemove.setEnabled(false);
-			jButtonRemove.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					jButtonRemove.setEnabled(false);
-					jButtonAdd.setEnabled(true);
-					ErrorGui.Type = "Warning!";
-					ErrorGui.content = "Will delete product!";
-					StatusGui = new ErrorGui();
-				}
-			});
-		}
-		return jButtonRemove;
-	}
-
+	
 	/**
 	 * This method initializes jTextPaneHcmut	
 	 * 	
