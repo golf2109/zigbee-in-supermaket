@@ -155,11 +155,15 @@ public class Read implements Runnable, SerialPortEventListener {
 					
 				}
 				String _sIdentify = new String(readBuffer).substring(0, 1);
-				if (_sIdentify.equals("#")){ //readBuffer is Packet ID and Product ID need to calc money
-					MainGui.ProcessData(0);
-				}else {//readBuffer is Product ID, need to add more in PacketID
-					MainGui.ProcessData(1);
+				switch (_sIdentify.charAt(0)){
+				case '#':MainGui.ProcessData(0);
+						break;
+				case '+':
+				case '-':MainGui.ProcessData(1);
+						break;
+				default:break;
 				}
+				
 				
 					
 			} catch (IOException e) {
