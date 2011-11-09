@@ -40,7 +40,11 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.JTableHeader;
 
 import com.ConvertDataIn;
+import com.Excel.WriteFile;
 import com.Uart.Read;
+import javax.swing.ListSelectionModel;
+
+import jxl.write.WriteException;
 
 public class MainGui extends JFrame {
 
@@ -78,10 +82,10 @@ public class MainGui extends JFrame {
 	private static JLabel jLabel1Money = null;
 	static int total = 0;
 	static int numofline=0;
-	public static String [][] _d= new String[50][500];
+	public static String [][] _d= new String[500][500];
 	static int length_d=0;
 	public static int numofpacket=0;
-	public static int[] NumOfNumProduct = new int[500];
+	public static int[] NumOfNumProduct = new int[5000];
 	Read reader =null;
 	public static ErrorGui StatusGui = null;
 	public static Help HelpGui = null;
@@ -95,7 +99,7 @@ public class MainGui extends JFrame {
 	JTextPane jTextPaneHcmut =null;
 	JTextPane jTextPaneQueueBrusting =null;
 	JTextPane jTextPaneDatalogic =null;
-	static String [][] _c= new String[500][5];
+	static String [][] _c = new String[5000][5];
 	static String col[] = {"Index","ProductID","ProductName","Price","NumOfProduct"};
 	/**
 	 * This is the default constructor
@@ -146,7 +150,8 @@ public class MainGui extends JFrame {
 	 * @return void
 	 */
 	public void initialize() {
-		this.setSize(537, 557);
+		this.setSize(784, 732);
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setBackground(new Color(255, 102, 0));
 		this.setTitle("Casher");
 		this.setVisible(true);
@@ -163,19 +168,22 @@ public class MainGui extends JFrame {
 		if (jContentPane == null) {
 			
 			jLabel1Money = new JLabel();
-			jLabel1Money.setBounds(new Rectangle(396, 340, 115, 31));
+			jLabel1Money.setBounds(new Rectangle(630, 525, 115, 31));
+			jLabel1Money.setFont(new Font("Dialog", Font.BOLD, 18));
 			jLabel1Money.setText("");
 			jLabel1Total = new JLabel();
-			jLabel1Total.setBounds(new Rectangle(300, 340, 96, 31));
+			jLabel1Total.setBounds(new Rectangle(525, 525, 96, 31));
+			jLabel1Total.setFont(new Font("Dialog", Font.BOLD, 18));
 			jLabel1Total.setText("");
 			jLabel1text = new JLabel();
-			jLabel1text.setBounds(new Rectangle(300, 400, 211, 30));
+			jLabel1text.setBounds(new Rectangle(390, 585, 361, 30));
+			jLabel1text.setFont(new Font("Dialog", Font.PLAIN, 14));
 			jLabel1text.setText("");
 			jLabel1PID = new JLabel();
-			jLabel1PID.setBounds(new Rectangle(120, 340, 123, 31));
+			jLabel1PID.setBounds(new Rectangle(120, 525, 123, 31));
 			jLabel1PID.setText("");
 			jLabel1PacketID = new JLabel();
-			jLabel1PacketID.setBounds(new Rectangle(10, 340, 81, 31));
+			jLabel1PacketID.setBounds(new Rectangle(15, 525, 91, 31));
 			jLabel1PacketID.setText("Packet Id:");
 			jLabel1PacketID.setVisible(false);
 			jLabel1IP = new JLabel();
@@ -225,47 +233,53 @@ public class MainGui extends JFrame {
 		if (jButtonConnect == null) {
 			jButtonConnect = new JButton();
 			jButtonConnect.setText("Connect");
-			jButtonConnect.setBounds(new Rectangle(10, 480, 101, 31));
+			jButtonConnect.setBounds(new Rectangle(120, 645, 91, 31));
 			jButtonConnect.setVisible(true);
 			jButtonConnect.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
-					System.out.println("actionPerformed()"); // TODO Auto-generated Event stub actionPerformed()
-					boolean portFound = false;
-					String defaultPort = choice.getSelectedItem();
-					portList = CommPortIdentifier.getPortIdentifiers();
-
-					while (portList.hasMoreElements()) {
-						portId = (CommPortIdentifier) portList.nextElement();
-						if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-							if (portId.getName().equals(defaultPort)) {
-								portFound = true;
-								reader = new Read(portId);
-								if(Read.bError){
-									jLabel1text.setText(choice.getSelectedItem()+ " is busy");
-									choice.setEnabled(true);
-									ErrorGui.Type = "error";
-									ErrorGui.content = choice.getSelectedItem()+ " is used by another program";
-								}
-								else{
-									jLabel1text.setText("Receive Data From "+ choice.getSelectedItem());
-									choice.setEnabled(false);
-									jButtonConnect.setEnabled(false);
-									jButtonDisconnect.setEnabled(true);
-									jPrintButton.setEnabled(true);
-									jClearButton.setEnabled(true);
-									jButtonCheckComPort.setEnabled(false);
-									ErrorGui.Type = "message";
-									ErrorGui.content = "Begin Receive Data From "+ choice.getSelectedItem();
+					if(jUARTRadioButton.isSelected()){
+						boolean portFound = false;
+	
+						String defaultPort = choice.getSelectedItem();
+						portList = CommPortIdentifier.getPortIdentifiers();
+	
+						while (portList.hasMoreElements()) {
+							portId = (CommPortIdentifier) portList.nextElement();
+							if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
+								if (portId.getName().equals(defaultPort)) {
+									portFound = true;
+									reader = new Read(portId);
+									if(Read.bError){
+										jLabel1text.setText(choice.getSelectedItem()+ " is busy");
+										choice.setEnabled(true);
+										ErrorGui.Type = "error";
+										ErrorGui.content = choice.getSelectedItem()+ " is used by another program";
+									}
+									else{
+										jLabel1text.setText("Receive Data From "+ choice.getSelectedItem());
+										choice.setEnabled(false);
+										jButtonConnect.setEnabled(false);
+										jButtonDisconnect.setEnabled(true);
+										jPrintButton.setEnabled(true);
+										jClearButton.setEnabled(true);
+										jButtonCheckComPort.setEnabled(false);
+										ErrorGui.Type = "message";
+										ErrorGui.content = "Begin Receive Data From "+ choice.getSelectedItem();
+									}
 								}
 							}
 						}
+						if (!portFound) {
+							jLabel1text.setText("Port not found.");
+							ErrorGui.Type = "error";
+							ErrorGui.content = "Port not found";
+						}
+						StatusGui = new ErrorGui();
+					}else if(jEthernetRadioButton.isSelected()){
+						//TODO
+						jButtonConnect.setEnabled(false);
+						jButtonDisconnect.setEnabled(true);
 					}
-					if (!portFound) {
-						jLabel1text.setText("Port not found.");
-						ErrorGui.Type = "error";
-						ErrorGui.content = "Port not found";
-					}
-					StatusGui = new ErrorGui();
 				}
 					
 			});
@@ -306,25 +320,29 @@ public class MainGui extends JFrame {
 		if (jButtonDisconnect == null) {
 			jButtonDisconnect = new JButton();
 			jButtonDisconnect.setText("Disconnect");
-			jButtonDisconnect.setBounds(new Rectangle(140, 480, 101, 31));
+			jButtonDisconnect.setBounds(new Rectangle(240, 645, 106, 31));
 			jButtonDisconnect.setVisible(true);
+			jButtonDisconnect.setEnabled(false);
 			jButtonDisconnect.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
-					if(portId!=null){
-						portId=null;
+					if(jUARTRadioButton.isSelected()){
+						if(portId!=null){
+							portId=null;
+						}
+						reader.serialPort.removeEventListener();
+						reader.serialPort.close();
+						reader.serialPort = null;
+						try {
+							reader.inputStream.close();
+							reader.inputStream = null;
+						} catch (IOException e2) {
+							// TODO Auto-generated catch block
+							e2.printStackTrace();
+						}
+						reader.readThread=null;
+					}else if(jEthernetRadioButton.isSelected()){
+						;
 					}
-					reader.serialPort.removeEventListener();
-					reader.serialPort.close();
-					reader.serialPort = null;
-					try {
-						reader.inputStream.close();
-						reader.inputStream = null;
-					} catch (IOException e2) {
-						// TODO Auto-generated catch block
-						e2.printStackTrace();
-					}
-					reader.readThread=null;
-					
 					choice.setEnabled(true);
 					jLabel1text.setText("");
 					jButtonCheckComPort.setEnabled(true);
@@ -346,7 +364,7 @@ public class MainGui extends JFrame {
 	private JButton getJClearButton() {
 		if (jClearButton == null) {
 			jClearButton = new JButton();
-			jClearButton.setBounds(new Rectangle(420, 480, 91, 31));
+			jClearButton.setBounds(new Rectangle(525, 645, 91, 31));
 			jClearButton.setText("Clear");
 			jClearButton.setEnabled(false);
 			jClearButton.addActionListener(new java.awt.event.ActionListener() {
@@ -451,13 +469,18 @@ public class MainGui extends JFrame {
 	private JButton getJPrintButton() {
 		if (jPrintButton == null) {
 			jPrintButton = new JButton();
-			jPrintButton.setBounds(new Rectangle(420, 440, 91, 31));
+			jPrintButton.setBounds(new Rectangle(660, 645, 91, 31));
 			                             //     (295, 200, 100, 29)
 			jPrintButton.setText("Print");
 			jPrintButton.setEnabled(false);
 			jPrintButton.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
-					;
+					WriteFile write =  new WriteFile();
+					try {
+						write.WriteExcel(ConvertDataIn.GerneralPathToWrite(_d[0][0].substring(0,ConvertDataIn.LengthOfPacketID)));
+					} catch (Exception e1) {
+						System.out.println("Write error");;
+					} 
 				}
 			});
 		}
@@ -492,11 +515,10 @@ public class MainGui extends JFrame {
 			if(_iType ==0){
 				_a = _testGetData.ConvertDataFromBoard(Read.readBuffer, 0);
 				_b = _testGetData.GetDataFromDatabase(PathDatabase, _a, 0);
-				//jLabel1PID.setText(_b[0]);
 				length_d=0;
-				_c[numofline++][0] = "Packet ID:  "+_b[0];
-				_d[numofpacket][length_d++] =_b[0];
-				for(i=0; i<(_testGetData.iNumOfTypeProduct)/4; i++){
+				_c[numofline++][0] = "Packet ID:  "+_b[0].substring(0,ConvertDataIn.LengthOfPacketID)+": "+_b[0].substring(ConvertDataIn.LengthOfPacketID,_b[0].length());
+				_d[numofpacket][length_d++] =_b[0].substring(0,ConvertDataIn.LengthOfPacketID);
+				for(i=0; i<(_testGetData.iNumOfTypeProduct); i++){
 					numofproduct = 0;
 					_d[numofpacket][length_d++] =_b[t+1];
 					_d[numofpacket][length_d++] =_b[t+2];
@@ -579,7 +601,7 @@ public class MainGui extends JFrame {
 		if (jButtonCheckComPort == null) {
 			jButtonCheckComPort = new JButton();
 			jButtonCheckComPort.setText("CheckPort");
-			jButtonCheckComPort.setBounds(new Rectangle(120, 30, 94, 21));
+			jButtonCheckComPort.setBounds(new Rectangle(120, 25, 94, 31));
 			jButtonCheckComPort.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
 					boolean isComPort = false;
@@ -671,7 +693,7 @@ public class MainGui extends JFrame {
 	private JButton getJButtonHelp() {
 		if (jButtonHelp == null) {
 			jButtonHelp = new JButton();
-			jButtonHelp.setBounds(new Rectangle(300, 440, 91, 30));
+			jButtonHelp.setBounds(new Rectangle(390, 645, 91, 30));
 			jButtonHelp.setText("Help");
 			jButtonHelp.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -691,9 +713,9 @@ public class MainGui extends JFrame {
 		if (jCOMPanel == null) {
 			jCOMPanel = new JPanel();
 			jCOMPanel.setLayout(null);
-			jCOMPanel.setBorder(BorderFactory.createTitledBorder(null, "Settings", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Dialog", Font.BOLD, 12), new Color(51, 51, 51)));
-			jCOMPanel.setSize(new Dimension(231, 71));
-			jCOMPanel.setLocation(new Point(10, 400));
+			jCOMPanel.setBorder(BorderFactory.createTitledBorder(null, "Settings", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Dialog", Font.PLAIN, 12), new Color(51, 51, 51)));
+			jCOMPanel.setSize(new Dimension(226, 71));
+			jCOMPanel.setLocation(new Point(120, 570));
 			jCOMPanel.add(getJButtonCheckComPort(), null);
 			jCOMPanel.add(getChoice(), null);
 		}
@@ -708,17 +730,30 @@ public class MainGui extends JFrame {
 	private JRadioButton getJUARTRadioButton() {
 		if (jUARTRadioButton == null) {
 			jUARTRadioButton = new JRadioButton();
-			jUARTRadioButton.setBounds(new Rectangle(130, 380, 101, 21));
+			jUARTRadioButton.setBounds(new Rectangle(15, 585, 76, 21));
 			jUARTRadioButton.setText("COM");
+			jUARTRadioButton.setMnemonic(KeyEvent.VK_UNDEFINED);
+			jUARTRadioButton.setSelected(true);
 			jUARTRadioButton.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
-					System.out.println("actionPerformed()"); // TODO Auto-generated Event stub actionPerformed()
-					jUARTRadioButton.setSelected(true);
-					jEthernetRadioButton.setSelected(false);
-					jEthernetPanel.setVisible(false);
-					jCOMPanel.setVisible(true);
-					jButtonConnect.setEnabled(true);
-					jButtonDisconnect.setEnabled(false);
+					if(jButtonConnect.isEnabled()==true){
+						jUARTRadioButton.setSelected(true);
+						jEthernetRadioButton.setSelected(false);
+						jEthernetPanel.setVisible(false);
+						jCOMPanel.setVisible(true);
+						jButtonConnect.setEnabled(true);
+						jButtonDisconnect.setEnabled(false);
+
+					}else{
+						if(jEthernetRadioButton.isSelected()==true){
+							jUARTRadioButton.setSelected(false);
+							jEthernetRadioButton.setSelected(true);
+						}else{
+							jUARTRadioButton.setSelected(true);
+							jEthernetRadioButton.setSelected(false);
+						}
+					}
+					
 				}
 			});
 		}
@@ -733,17 +768,29 @@ public class MainGui extends JFrame {
 	private JRadioButton getJEthernetRadioButton() {
 		if (jEthernetRadioButton == null) {
 			jEthernetRadioButton = new JRadioButton();
-			jEthernetRadioButton.setBounds(new Rectangle(30, 380, 81, 21));
+			jEthernetRadioButton.setBounds(new Rectangle(15, 615, 81, 21));
 			jEthernetRadioButton.setText("Ethernet");
+			jEthernetRadioButton.setSelected(false);
 			jEthernetRadioButton.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
-					System.out.println("actionPerformed()"); // TODO Auto-generated Event stub actionPerformed()
-					jUARTRadioButton.setSelected(false);
-					jEthernetRadioButton.setSelected(true);
-					jEthernetPanel.setVisible(true);
-					jCOMPanel.setVisible(false);
-					jButtonConnect.setEnabled(true);
-					jButtonDisconnect.setEnabled(false);
+					if(jButtonConnect.isEnabled()==true){
+		
+						jUARTRadioButton.setSelected(false);
+						jEthernetRadioButton.setSelected(true);
+						jEthernetPanel.setVisible(true);
+						jCOMPanel.setVisible(false);
+						jButtonConnect.setEnabled(true);
+						jButtonDisconnect.setEnabled(false);
+				
+					}else if(jUARTRadioButton.isSelected()==true){
+						jUARTRadioButton.setSelected(true);
+						jEthernetRadioButton.setSelected(false);
+					}else{
+						jUARTRadioButton.setSelected(false);
+						jEthernetRadioButton.setSelected(true);
+					}
+						
+					
 				}
 			});
 		}
@@ -759,9 +806,10 @@ public class MainGui extends JFrame {
 		if (jEthernetPanel == null) {
 			jEthernetPanel = new JPanel();
 			jEthernetPanel.setLayout(null);
-			jEthernetPanel.setBounds(new Rectangle(10, 400, 231, 71));
-			jEthernetPanel.setBorder(BorderFactory.createTitledBorder(null, "Settings", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Dialog", Font.BOLD, 12), new Color(51, 51, 51)));
+			jEthernetPanel.setBorder(BorderFactory.createTitledBorder(null, "Settings", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, new Font("Dialog", Font.PLAIN, 12), new Color(51, 51, 51)));
 			jEthernetPanel.setVisible(false);
+			jEthernetPanel.setSize(new Dimension(226, 71));
+			jEthernetPanel.setLocation(new Point(120, 570));
 			jEthernetPanel.add(jLabel1IP, null);
 			jEthernetPanel.add(jLabelPort, null);
 			jEthernetPanel.add(getJTextFieldPort(), null);
@@ -778,7 +826,8 @@ public class MainGui extends JFrame {
 	private JScrollPane getJTableScrollPane() {
 		if (jTableScrollPane == null) {
 			jTableScrollPane = new JScrollPane(getJTable());
-			jTableScrollPane.setBounds(new Rectangle(15, 135, 496, 181));
+			jTableScrollPane.setBounds(new Rectangle(15, 105, 737, 406));
+			jTableScrollPane.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
 			jTableScrollPane.setViewportView(getJTable());
 			jTableScrollPane.setAutoscrolls(true);
 			
@@ -797,6 +846,14 @@ public class MainGui extends JFrame {
 			JTableHeader header = jTable.getTableHeader();
 			header.setBackground(Color.red);
 			jTable.setEnabled(false);
+			jTable.setRowHeight(20);
+			jTable.setRowSelectionAllowed(false);
+			jTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			jTable.setShowGrid(true);
+			jTable.setShowVerticalLines(false);
+			jTable.setShowHorizontalLines(false);
+			jTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+			jTable.setVisible(true);
 		}
 		return jTable;
 	}
@@ -804,4 +861,4 @@ public class MainGui extends JFrame {
 	public static void main(String arg[]) {
 		MainGui a = new MainGui(); 
 	}
-}  //  @jve:decl-index=0:visual-constraint="20,10"
+}  //  @jve:decl-index=0:visual-constraint="25,49"

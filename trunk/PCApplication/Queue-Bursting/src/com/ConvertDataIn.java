@@ -12,32 +12,62 @@ public class ConvertDataIn {
 	public int iNumOfTypeProduct ;
 	public static String[] saProductIDError =  new String[100];
 	public static int iNumOfProductIDError = 0;
+	public static int[] LengthOfNum = new int[5000];
+	public static int LengthOfPacketID;
+	public static int LengthOfProductID;
 	
 	/* 
-	 * Process data which was recv from the booad through COM port
+	 * Process data which was recv from the board through COM port
 	 * @param _bDataIn : byte array data incoming from board EB through COM port
 	 * return Data which was converted as String
 	 */
 	public String ConvertDataFromBoard(byte[] _bDataIn, int _bType) {
 
-		int i = 9;
+		
 		String _sDataIn = new String(_bDataIn);
 		String _sDataOut = "";
+		int IndexLengthOfNum = 0;
 		if (_bType == 0){
-			_sDataOut += _sDataIn.substring(0, 8)+ _bDataIn[8]; //Get Packet Id and Number Of Tpye Product
+			LengthOfPacketID = _bDataIn[1];
+			LengthOfProductID = _bDataIn[2];
+			_sDataOut += _sDataIn.substring(3, 3+ LengthOfPacketID)+ _bDataIn[3+LengthOfPacketID]; //Get Packet Id and Number Of Type Product
+			iNumOfTypeProduct = _bDataIn[3+ LengthOfPacketID];
 			
-			int _iNumOfTypeProduct = _bDataIn[8];
+			if (iNumOfTypeProduct>9){
+				LengthOfNum[IndexLengthOfNum++] = 2;
+			}else if (iNumOfTypeProduct>99){
+				LengthOfNum[IndexLengthOfNum++] = 3;
+			}else{
+				LengthOfNum[IndexLengthOfNum++] = 1;
+			}
+			int i = 3+ LengthOfPacketID +1;
 			int _iNumOfEachProduct;
-			while(i < 14*_iNumOfTypeProduct + 9){
-				_sDataOut += _sDataIn.substring(i, i+13);
-				_iNumOfEachProduct = _bDataIn[i+13];
-				_sDataOut += _iNumOfEachProduct;
-				i +=14;
+			while(i < 3+ LengthOfPacketID +1 + iNumOfTypeProduct*(LengthOfProductID+1)){
+				_iNumOfEachProduct = _bDataIn[i+LengthOfProductID];
+				if (_iNumOfEachProduct>9){
+					LengthOfNum[IndexLengthOfNum++] = 2;
+				}else if (_iNumOfEachProduct>99){
+					LengthOfNum[IndexLengthOfNum++] = 3;
+				}else{
+					LengthOfNum[IndexLengthOfNum++] = 1;
+				}
+				
+				_sDataOut += _sDataIn.substring(i, i+LengthOfProductID);
+				_sDataOut += _iNumOfEachProduct;	
+				
+				i += LengthOfProductID +1;
+				
 			}
 			
 		}else{// add and remove
 			_sDataOut = _sDataIn.substring(0, 14)+_bDataIn[14];
-			System.out.println(_sDataOut);
+			if ((int)_bDataIn[14]>9){
+				LengthOfNum[IndexLengthOfNum] = 2;
+			}else if ((int)_bDataIn[14]>99){
+				LengthOfNum[IndexLengthOfNum] = 3;
+			}else{
+				LengthOfNum[IndexLengthOfNum] = 1;
+			}
 		}
 		return _sDataOut;
 	}
@@ -49,19 +79,21 @@ public class ConvertDataIn {
 	 * return Array of String with all infomation of all product of packet
 	 */
 	public String[] GetDataFromDatabase(String _Path, String _sDataIn, int _iType) {
-		int i = 9;
+		int k=0;
+		int i = LengthOfPacketID + LengthOfNum[k];
 		int j = 2;
 		boolean _inDatabase = false;
-		iNumOfTypeProduct = 0;
+		int _iNumOfTypeProduct = 0;
 		String _sTemp;
 		ReadFile _cReadDataBase = new ReadFile();
 		String[] _saDataOut;
+		_saDataOut = new String[4 *iNumOfTypeProduct+1];
 		if(_iType == 0){
-			_saDataOut = new String[4 * ((_sDataIn.length() - 8)/14)+1];
-			_saDataOut[0] = _sDataIn.substring(0, 8); // packet ID
+			_saDataOut[0] = _sDataIn.substring(0, i); // packet ID
 			while(i < _sDataIn.length()) {
-				_sTemp = _sDataIn.substring(i,i+13);
-				i += 14;
+				k++;
+				_sTemp = _sDataIn.substring(i, i+ LengthOfProductID);
+				i += LengthOfProductID+ LengthOfNum[k];
 				_inDatabase = false;
 				
 					for (j = 2; j < 14; j++) { // Check Database
@@ -79,21 +111,19 @@ public class ConvertDataIn {
 				
 				if (_inDatabase) {
 					try {
-						_saDataOut[++iNumOfTypeProduct] = _cReadDataBase.ReadExcel(_Path, 1, j);
-						_saDataOut[++iNumOfTypeProduct] = _cReadDataBase.ReadExcel(_Path, 2, j);
-						_saDataOut[++iNumOfTypeProduct] = _cReadDataBase.ReadExcel(_Path, 3, j);
-						_saDataOut[++iNumOfTypeProduct] = _sDataIn.substring(i-1,i);
+						_saDataOut[++_iNumOfTypeProduct] = _cReadDataBase.ReadExcel(_Path, 1, j);
+						_saDataOut[++_iNumOfTypeProduct] = _cReadDataBase.ReadExcel(_Path, 2, j);
+						_saDataOut[++_iNumOfTypeProduct] = _cReadDataBase.ReadExcel(_Path, 3, j);
+						_saDataOut[++_iNumOfTypeProduct] = _sDataIn.substring(i-LengthOfNum[k],i);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				} else{ //Product ID isn't exist in database, something error
-//					saProductIDError[iNumOfProductIDError] = _sTemp; 
-//					iNumOfProductIDError++;
-					_saDataOut[++iNumOfTypeProduct]=_sTemp;
-					_saDataOut[++iNumOfTypeProduct]="Not found ";
-					_saDataOut[++iNumOfTypeProduct]="0";
-					_saDataOut[++iNumOfTypeProduct] = _sDataIn.substring(i-1,i);;				
+					_saDataOut[++_iNumOfTypeProduct]=_sTemp;
+					_saDataOut[++_iNumOfTypeProduct]="Not found ";
+					_saDataOut[++_iNumOfTypeProduct]="0";
+					_saDataOut[++_iNumOfTypeProduct] = _sDataIn.substring(i-LengthOfNum[k],i);;				
 					
 				}					
 				}
