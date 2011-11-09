@@ -1,10 +1,8 @@
-#include <hal_types.h>
-#include "Serialize.h"
-#include "dataflash.h"
-#include "OSAL_Memory.h"
-#include "OSAL.h"
-#include "common.h"
-#include "xdata_handle.h"
+/**
+* @file xdata_handle.c
+* @brief
+*
+*/
 /*******Flash Layout*************
 - Quantiy Of Basket         1B
 - Basket Length in Bytes    2B : N + 1B
@@ -16,23 +14,33 @@
  + struct Basket            N
 ...
 */
-#define  START_ADDRESS    0x000080
+
+#include <hal_types.h>
+#include "Serialize.h"
+#include "dataflash.h"
+#include "OSAL_Memory.h"
+#include "OSAL.h"
+#include "common.h"
+#include "xdata_handle.h"
+
+/**Defines*/
+#define  START_ADDRESS      0x000080
 #define  FLASH_HEADER_SIZE  0x03
 #define  BASKET_FLAG        "&"
 #define  BASKET_FLAG_SIZE   0x01
-/**
-*/
+/**Flash Header*/
 typedef   struct{
   uint8   num;
   uint16  size;
 }FlashHeader;
-/**
-*/
+/**Structure of Items in Flash*/
 typedef   struct{
   uint8   flag;
   Basket  data;
 }FlashMember;
+/**Point to Basket read*/
 static FlashMember   *pMember;
+/**Store processing Flash Header*/
 static FlashHeader  InfoBaskets;
 /**
 * @fn       FlashReset
@@ -89,7 +97,10 @@ Basket* ReadBasket(uint8 *pID)
     return NULL;
 }
 /**
-* @return 0: success, 1: fail, not exist
+* @fn EraseBasket
+* @brief
+* @param  pID
+* @return 0: success, 1: fail or not exist
 */
 uint8 EraseBasket(uint8 *pID)
 {
@@ -114,6 +125,9 @@ uint8 EraseBasket(uint8 *pID)
   return rt;
 }
 /**
+* @fn WriteBasket
+* @brief
+* @param  pBasket
 * @return 0: Success
 */
 uint8 WriteBasket(Basket *pBasket)

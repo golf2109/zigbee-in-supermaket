@@ -1,3 +1,7 @@
+/**
+* @file scanner_handle.c
+* @brief
+*/
 #include <hal_types.h>
 #include "hal_led.h"
 #include "buffer.h"
@@ -7,14 +11,15 @@
 #include "xdata_handle.h"
 #include "scanner_handle.h"
 
-/**df*/
-#define BASKET_ID_NULL  "--------"
 /**Store Basket scanning*/
 static Basket  *CurrentBasket;
 /**Point to Product scanning*/
 static Product *CurrentProduct;
-/***
-* return 0: error, other: the number of bytes of string
+/**
+* @fn getString
+* @brief
+* @param pBuf,output, max_length
+* @return 0: error, other: the number of bytes of string
 */
 static uint8 getString(ringBuf_t *pBuf, uint8 *output, const uint8 max_length)
 {
@@ -32,7 +37,10 @@ static uint8 getString(ringBuf_t *pBuf, uint8 *output, const uint8 max_length)
   return i;
 }
 /*
-* return 1: true, 0: false
+* @fn IsBasketID
+* @brief
+* @param input, length
+* @return 1: true, 0: false
 */
 static uint8 IsBasketID(uint8 *input, const uint8 length){
   if(input[0] == BASKET_ID_FORMAT && length == BASKET_ID_LEN)
@@ -40,8 +48,11 @@ static uint8 IsBasketID(uint8 *input, const uint8 length){
   else
     return 0;
 }
-/*
-* return 1: true, 0: false
+/**
+* @fn   IsProductID
+* @brief
+* @param input, length
+* @return 1: true, 0: false
 */
 static uint8 IsProductID(uint8 *input, const uint8 length){
   if(input[0] != BASKET_ID_FORMAT && length == PRODS_ID_LEN)
@@ -50,8 +61,11 @@ static uint8 IsProductID(uint8 *input, const uint8 length){
     return 0;
 }
 
-/*
-* return 0: not found, other: index
+/**
+* @fn   FindProductInBasket
+* @brief
+* @param prodID, length, basket
+* return NULL: not found, other: index
 */
 static Product* FindProductInBasket(uint8 *prodID,const uint8 length,Basket * basket)
 {
@@ -65,25 +79,41 @@ static Product* FindProductInBasket(uint8 *prodID,const uint8 length,Basket * ba
     }
   return NULL;
 }
-/*
-* 
+/**
+* @fn   NewBasket
+* @brief
+* @param id
+* @return NULL: error alloc, other: success
 */
 static Basket * NewBasket(uint8 * id)
 {
   //Clear Current Basket ID
   //CopyString((uint8*)a->id,id,BASKET_ID_LEN);
   Basket * pk =(Basket *)osal_mem_alloc(sizeof(Basket));
+  if(pk==NULL)
+    return NULL;
   osal_memcpy((uint8*)pk->id,(uint8*)id,BASKET_ID_LEN);
   //Clear len
   pk->len =0;
   return pk;
 }
+/**
+* @fn  ScannerHandleInit
+* @brief
+* @param none
+* @return none
+*/
 void ScannerHandleInit(void)
 {
   CurrentBasket=NULL;
   CurrentProduct = NULL;
 }
-
+/**
+* @fn   ScannerHandleInput
+* @brief
+* @param pBuf
+* @return none
+*/
 void ScannerHandleInput(ringBuf_t *pBuf)
 {
   uint8 tmp[24];
@@ -120,6 +150,9 @@ void ScannerHandleInput(ringBuf_t *pBuf)
         {
           //New Basket;
           CurrentBasket= NewBasket(tmp);
+          //Error
+          if(CurrentBasket== NULL)
+            return;
           // Signal to User: turn on LED
           HalLedSet( HAL_LED_4, HAL_LED_MODE_ON );
         }else
