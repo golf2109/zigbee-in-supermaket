@@ -7,6 +7,7 @@ import java.util.Locale;
 import jxl.CellView;
 import jxl.Workbook;
 import jxl.WorkbookSettings;
+import jxl.format.CellFormat;
 import jxl.format.UnderlineStyle;
 import jxl.write.Label;
 import jxl.write.Number;
@@ -41,7 +42,7 @@ public class WriteFile {
 			for(i = 0; i < MainGui.numofpacket; i++){
 				if(i==0) createLabel(_sPath,excelSheet,true);
 				else  createLabel(_sPath,excelSheet,false);
-				createContent(excelSheet, MainGui._d[i], MainGui.NumOfNumProduct[i]+1);
+				createContent(excelSheet, MainGui._d[i], MainGui.NumOfNumProduct[i]);
 			}
 			workbook.write();
 			workbook.close();
@@ -68,9 +69,12 @@ public class WriteFile {
 		cv.setFormat(timesBoldUnderline);
 		cv.setAutosize(true);
 		// Write a few headers
-		
+		sheet.setColumnView(0, cv);
+		sheet.setColumnView(1, cv);
+		sheet.setColumnView(2, cv);
+		sheet.setColumnView(3, cv);
+		sheet.setColumnView(4, cv);
 		addCaption(sheet, 0, row++, MainGui._d[i][0]); // Write Packet ID
-		if(first)
 		for (int i = 0; i < 5; i++) {
 			addCaption(sheet, i, row, Label1[i]);
 		}
@@ -82,11 +86,13 @@ public class WriteFile {
 		int i1=1;
 		int t=1;
 		int _total =0;
-		System.out.println(length);
-		while (i1 < length) {
+		while (t < length+1) {
 			addNumber(sheet, 0, row,t++ ); //index
 			for (col = 1; col <= 4; col++) {
-				addLabel(sheet, col, row, Data[i1]);
+				if(col<=2)
+					addLabel(sheet, col, row, Data[i1]);
+				else
+					addNumber(sheet, col, row, Integer.parseInt(Data[i1]));
 				if(col==3&&Data[i1]!=null)
 				_total += Integer.parseInt(Data[i1])*Integer.parseInt(Data[i1+1]);
 				
