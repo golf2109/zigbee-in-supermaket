@@ -103,10 +103,9 @@ afAddrType_t HandheldApp_DstAddr;
 /*********************************************************************
  * LOCAL FUNCTIONS
  */
-void HandheldApp_ProcessZDOMsgs( zdoIncomingMsg_t *inMsg );
-void HandheldApp_HandleKeys( byte shift, byte keys );
+
 void HandheldApp_MessageMSGCB( afIncomingMSGPacket_t *pckt );
-void HandheldApp_SendTheMessage( void );
+
 
 /*********************************************************************
  * NETWORK LAYER CALLBACKS
@@ -248,7 +247,9 @@ UINT16 HandheldApp_ProcessEvent( byte task_id, UINT16 events )
             //                    HANDHELDAPP_SEND_MSG_EVT,
              //                   HANDHELDAPP_SEND_MSG_TIMEOUT );
           }else if(HandheldApp_NwkState== DEV_NWK_ORPHAN)
+#if defined( LCD_SUPPORTED )
              printText("Disconnect",11);
+#endif
           break;
 
         default:
@@ -280,141 +281,6 @@ UINT16 HandheldApp_ProcessEvent( byte task_id, UINT16 events )
   return 0;
 }
 
-/*********************************************************************
- * Event Generation Functions
- */
-
-/*********************************************************************
- * @fn      HandheldApp_ProcessZDOMsgs()
- *
- * @brief   Process response messages
- *
- * @param   none
- *
- * @return  none
- */
-void HandheldApp_ProcessZDOMsgs( zdoIncomingMsg_t *inMsg )
-{
-  switch ( inMsg->clusterID )
-  {
-    case End_Device_Bind_rsp:
-      if ( ZDO_ParseBindRsp( inMsg ) == ZSuccess )
-      {
-        // Light LED
-        HalLedSet( HAL_LED_4, HAL_LED_MODE_ON );
-      }
-#if defined( BLINK_LEDS )
-      else
-      {
-        // Flash LED to show failure
-        HalLedSet ( HAL_LED_4, HAL_LED_MODE_FLASH );
-      }
-#endif
-      break;
-
-    case Match_Desc_rsp:
-      {
-        ZDO_ActiveEndpointRsp_t *pRsp = ZDO_ParseEPListRsp( inMsg );
-        if ( pRsp )
-        {
-          if ( pRsp->status == ZSuccess && pRsp->cnt )
-          {
-            HandheldApp_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;
-            HandheldApp_DstAddr.addr.shortAddr = pRsp->nwkAddr;
-            // Take the first endpoint, Can be changed to search through endpoints
-            HandheldApp_DstAddr.endPoint = pRsp->epList[0];
-
-            // Light LED
-            HalLedSet( HAL_LED_4, HAL_LED_MODE_ON );
-          }
-          osal_mem_free( pRsp );
-        }
-      }
-      break;
-  }
-}
-
-/*********************************************************************
- * @fn      HandheldApp_HandleKeys
- *
- * @brief   Handles all key events for this device.
- *
- * @param   shift - true if in shift/alt.
- * @param   keys - bit field for key events. Valid entries:
- *                 HAL_KEY_SW_4
- *                 HAL_KEY_SW_3
- *                 HAL_KEY_SW_2
- *                 HAL_KEY_SW_1
- *
- * @return  none
- */
-void HandheldApp_HandleKeys( byte shift, byte keys )
-{
-  zAddrType_t dstAddr;
-
-  // Shift is used to make each button/switch dual purpose.
-  if ( shift )
-  {
-    if ( keys & HAL_KEY_SW_1 )
-    {
-    }
-    if ( keys & HAL_KEY_SW_2 )
-    {
-    }
-    if ( keys & HAL_KEY_SW_3 )
-    {
-    }
-    if ( keys & HAL_KEY_SW_4 )
-    {
-    }
-  }
-  else
-  {
-    if ( keys & HAL_KEY_SW_1 )
-    {
-      // Since SW1 isn't used for anything else in this application...
-#if defined( SWITCH1_BIND )
-      // we can use SW1 to simulate SW2 for devices that only have one switch,
-      keys |= HAL_KEY_SW_2;
-#elif defined( SWITCH1_MATCH )
-      // or use SW1 to simulate SW4 for devices that only have one switch
-      keys |= HAL_KEY_SW_4;
-#endif
-    }
-
-    if ( keys & HAL_KEY_SW_2 )
-    {
-      HalLedSet ( HAL_LED_4, HAL_LED_MODE_OFF );
-
-      // Initiate an End Device Bind Request for the mandatory endpoint
-      dstAddr.addrMode = Addr16Bit;
-      dstAddr.addr.shortAddr = 0x0000; // Coordinator
-      ZDP_EndDeviceBindReq( &dstAddr, NLME_GetShortAddr(),
-                            HandheldApp_epDesc.endPoint,
-                            HANDHELDAPP_PROFID,
-                            HANDHELDAPP_MAX_CLUSTERS, (cId_t *)HandheldApp_ClusterList,
-                            HANDHELDAPP_MAX_CLUSTERS, (cId_t *)HandheldApp_ClusterList,
-                            FALSE );
-    }
-
-    if ( keys & HAL_KEY_SW_3 )
-    {
-    }
-
-    if ( keys & HAL_KEY_SW_4 )
-    {
-      HalLedSet ( HAL_LED_4, HAL_LED_MODE_OFF );
-      // Initiate a Match Description Request (Service Discovery)
-      dstAddr.addrMode = AddrBroadcast;
-      dstAddr.addr.shortAddr = NWK_BROADCAST_SHORTADDR;
-      ZDP_MatchDescReq( &dstAddr, NWK_BROADCAST_SHORTADDR,
-                        HANDHELDAPP_PROFID,
-                        HANDHELDAPP_MAX_CLUSTERS, (cId_t *)HandheldApp_ClusterList,
-                        HANDHELDAPP_MAX_CLUSTERS, (cId_t *)HandheldApp_ClusterList,
-                        FALSE );
-    }
-  }
-}
 
 /*********************************************************************
  * LOCAL FUNCTIONS
@@ -471,34 +337,6 @@ void HandheldApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
       WPRINTSTR( pkt->cmd.Data );
 #endif
       break;
-  }
-}
-
-/*********************************************************************
- * @fn      HandheldApp_SendTheMessage
- *
- * @brief   Send "the" message.
- *
- * @param   none
- *
- * @return  none
- */
-void HandheldApp_SendTheMessage( void )
-{
-  char theMessageData[] = "Hello World";
-
-  if ( AF_DataRequest( &HandheldApp_DstAddr, &HandheldApp_epDesc,
-                       HANDHELDAPP_CLUSTERID,
-                       (byte)osal_strlen( theMessageData ) + 1,
-                       (byte *)&theMessageData,
-                       &HandheldApp_TransID,
-                       AF_DISCV_ROUTE, AF_DEFAULT_RADIUS ) == afStatus_SUCCESS )
-  {
-    // Successfully requested to be sent.
-  }
-  else
-  {
-    // Error occurred in request to send.
   }
 }
 
