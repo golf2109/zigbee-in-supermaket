@@ -260,8 +260,6 @@ public class MainGui extends JFrame {
 										choice.setEnabled(false);
 										jButtonConnect.setEnabled(false);
 										jButtonDisconnect.setEnabled(true);
-										jPrintButton.setEnabled(true);
-										jClearButton.setEnabled(true);
 										jButtonCheckComPort.setEnabled(false);
 										ErrorGui.Type = "message";
 										ErrorGui.content = "Begin Receive Data From "+ choice.getSelectedItem();
@@ -329,6 +327,7 @@ public class MainGui extends JFrame {
 						if(portId!=null){
 							portId=null;
 						}
+						
 						reader.serialPort.removeEventListener();
 						reader.serialPort.close();
 						reader.serialPort = null;
@@ -349,7 +348,9 @@ public class MainGui extends JFrame {
 					jButtonConnect.setEnabled(true);
 					jButtonDisconnect.setEnabled(false);
 					jPrintButton.setEnabled(false);
+					jClearButton.doClick();
 					jClearButton.setEnabled(false);
+					
 				}
 			});
 		}
@@ -382,6 +383,7 @@ public class MainGui extends JFrame {
 					total =0;
 			        jLabel1Total.setText(null);
 			        jLabel1Money.setText(null);
+			        jPrintButton.setEnabled(false);
 
 				}
 			});
@@ -589,6 +591,8 @@ public class MainGui extends JFrame {
 				NumOfNumProduct[numofpacket++]=	1;
 				}
 				jTable.updateUI();
+				jPrintButton.setEnabled(true);
+				jClearButton.setEnabled(true);
 			}
 		}
      }

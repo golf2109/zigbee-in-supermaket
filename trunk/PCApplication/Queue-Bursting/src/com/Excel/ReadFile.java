@@ -14,7 +14,7 @@ import jxl.read.biff.BiffException;
  * return array of array string contain _Num data product
  * 
  */
-public class ReadFile {  
+public class ReadFile {
 	public String[][] ReadExcel(String _InputFile, int _Num) throws IOException {
 		File _fInputWorkbook = new File(_InputFile);
 		String[][] _sResult = new String[_Num][4];
