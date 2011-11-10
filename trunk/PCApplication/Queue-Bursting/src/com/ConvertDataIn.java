@@ -60,9 +60,9 @@ public class ConvertDataIn {
 			
 		}else{// add and remove
 			_sDataOut = _sDataIn.substring(0, LengthOfProductID+1)+_bDataIn[LengthOfProductID+1];
-			if ((int)_bDataIn[14]>9){
+			if ((int)_bDataIn[14]>99){
 				LengthOfNum[IndexLengthOfNum] = 3;
-			}else if ((int)_bDataIn[14]>99){
+			}else if ((int)_bDataIn[14]>9){
 				LengthOfNum[IndexLengthOfNum] = 2;
 			}else{
 				LengthOfNum[IndexLengthOfNum] = 1;
