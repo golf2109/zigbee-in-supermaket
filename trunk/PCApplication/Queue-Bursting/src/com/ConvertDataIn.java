@@ -86,6 +86,12 @@ public class ConvertDataIn {
 		int _iNumOfTypeProduct = 0;
 		String _sTemp;
 		ReadFile _cReadDataBase = new ReadFile();
+		String[][] _Database = null;
+		try {
+			_Database = _cReadDataBase.ReadExcel(_Path, 14);
+		} catch (IOException e) {
+			System.out.println("Read Database error");
+		}
 		String[] _saDataOut;
 		_saDataOut = new String[4 *iNumOfTypeProduct+1];
 		if(_iType == 0){
@@ -97,28 +103,18 @@ public class ConvertDataIn {
 				_inDatabase = false;
 				
 					for (j = 2; j < 14; j++) { // Check Database
-						try {
-							
-						if (_cReadDataBase.ReadExcel(_Path, 1, j).equals(_sTemp)) {
+						System.out.println(_Database[j][1]);
+						if (_Database[j][1].equals(_sTemp)) {
 							_inDatabase = true;
 							break;
-						}
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							System.out.println("Can't File " + _Path);
 						}
 					}
 				
 				if (_inDatabase) {
-					try {
-						_saDataOut[++_iNumOfTypeProduct] = _cReadDataBase.ReadExcel(_Path, 1, j);
-						_saDataOut[++_iNumOfTypeProduct] = _cReadDataBase.ReadExcel(_Path, 2, j);
-						_saDataOut[++_iNumOfTypeProduct] = _cReadDataBase.ReadExcel(_Path, 3, j);
-						_saDataOut[++_iNumOfTypeProduct] = _sDataIn.substring(i-LengthOfNum[k],i);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					_saDataOut[++_iNumOfTypeProduct] = _Database[j][1];
+					_saDataOut[++_iNumOfTypeProduct] = _Database[j][2];
+					_saDataOut[++_iNumOfTypeProduct] = _Database[j][3];
+					_saDataOut[++_iNumOfTypeProduct] = _sDataIn.substring(i-LengthOfNum[k],i);
 				} else{ //Product ID isn't exist in database, something error
 					_saDataOut[++_iNumOfTypeProduct]=_sTemp;
 					_saDataOut[++_iNumOfTypeProduct]="Not found ";
@@ -132,32 +128,21 @@ public class ConvertDataIn {
 			_inDatabase = false;
 			_sTemp = _sDataIn.substring(1,14);
 			for (j = 2; j < 14; j++) { // Check Database
-				try {
-					
-				if (_cReadDataBase.ReadExcel(_Path, 1, j).equals(_sTemp)) {
+				if (_Database[j][1].equals(_sTemp)) {
 					_inDatabase = true;
 					break;
 				}
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					System.out.println("Can't File " + _Path);
-				}
 			}
 			if (_inDatabase) {
-				try {
-					if(_sDataIn.substring(0,1).equals("+"))
-						_saDataOut[0] = "Add more product";
-					else
-						_saDataOut[0] = "Remove product";
-					
-					_saDataOut[1] = _cReadDataBase.ReadExcel(_Path, 1, j);
-					_saDataOut[2] = _cReadDataBase.ReadExcel(_Path, 2, j);
-					_saDataOut[3] = _cReadDataBase.ReadExcel(_Path, 3, j);
-					_saDataOut[4] = _sDataIn.substring(14,15);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				if(_sDataIn.substring(0,1).equals("+"))
+					_saDataOut[0] = "Add more product";
+				else
+					_saDataOut[0] = "Remove product";
+				
+				_saDataOut[1] = _Database[j][1];
+				_saDataOut[2] = _Database[j][2];
+				_saDataOut[3] = _Database[j][3];
+				_saDataOut[4] = _sDataIn.substring(14,15);
 			}else
 				_saDataOut[0] = "Not Found";
 			    _saDataOut[1]=_sDataIn.substring(1,14);
@@ -177,30 +162,4 @@ public class ConvertDataIn {
 		
 	}
 
-//	public static void main(String args[]) {//just for test
-//		byte[] byteArray = new byte[] { 69, 
-//				                        55, 55, 55, 55, 55, 55, 55, 
-//										2,
-//										55, 55, 55, 55, 55, 55, 55, 56, 56, 56,56,55, 55, 2,
-//										53, 52, 55, 55, 55, 55, 55, 56, 56, 56,56,52, 52, 2
-//										};
-//		ConvertDataIn _testGetData = new ConvertDataIn();
-//		String _a = _testGetData.ConvertDataFromBoard(byteArray);
-//		String [] _b= _testGetData.GetDataFromDatabase(sPathDatabase, _a);
-//		for(int i=0; i< iNumOfTypeProduct+1;i++){
-//		System.out.print(_b[i]+" ");
-//		}
-//		
-//		WriteFile _testWrite = new WriteFile();
-//		String Path = GerneralPathToWrite(_b[0]);
-//		try {
-//			_testWrite.writeExcel(Path, _b, NumOfTypeProduct+1,true);
-//		} catch (WriteException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-	}
-//}
+}
