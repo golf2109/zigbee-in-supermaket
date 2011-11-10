@@ -13,8 +13,8 @@ public class ConvertDataIn {
 	public static String[] saProductIDError =  new String[100];
 	public static int iNumOfProductIDError = 0;
 	public static int[] LengthOfNum = new int[5000];
-	public static int LengthOfPacketID;
-	public static int LengthOfProductID;
+	public static int LengthOfPacketID = 8;
+	public static int LengthOfProductID = 13;
 	
 	/* 
 	 * Process data which was recv from the board through COM port
@@ -32,11 +32,10 @@ public class ConvertDataIn {
 			LengthOfProductID = _bDataIn[2];
 			_sDataOut += _sDataIn.substring(3, 3+ LengthOfPacketID)+ _bDataIn[3+LengthOfPacketID]; //Get Packet Id and Number Of Type Product
 			iNumOfTypeProduct = _bDataIn[3+ LengthOfPacketID];
-			
-			if (iNumOfTypeProduct>9){
-				LengthOfNum[IndexLengthOfNum++] = 2;
-			}else if (iNumOfTypeProduct>99){
+			if (iNumOfTypeProduct>99){
 				LengthOfNum[IndexLengthOfNum++] = 3;
+			}else if (iNumOfTypeProduct>9){
+				LengthOfNum[IndexLengthOfNum++] = 2;
 			}else{
 				LengthOfNum[IndexLengthOfNum++] = 1;
 			}
@@ -44,10 +43,10 @@ public class ConvertDataIn {
 			int _iNumOfEachProduct;
 			while(i < 3+ LengthOfPacketID +1 + iNumOfTypeProduct*(LengthOfProductID+1)){
 				_iNumOfEachProduct = _bDataIn[i+LengthOfProductID];
-				if (_iNumOfEachProduct>9){
-					LengthOfNum[IndexLengthOfNum++] = 2;
-				}else if (_iNumOfEachProduct>99){
+				if (_iNumOfEachProduct>99){
 					LengthOfNum[IndexLengthOfNum++] = 3;
+				}else if (_iNumOfEachProduct>9){
+					LengthOfNum[IndexLengthOfNum++] = 2;
 				}else{
 					LengthOfNum[IndexLengthOfNum++] = 1;
 				}
@@ -60,11 +59,11 @@ public class ConvertDataIn {
 			}
 			
 		}else{// add and remove
-			_sDataOut = _sDataIn.substring(0, 14)+_bDataIn[14];
+			_sDataOut = _sDataIn.substring(0, LengthOfProductID+1)+_bDataIn[LengthOfProductID+1];
 			if ((int)_bDataIn[14]>9){
-				LengthOfNum[IndexLengthOfNum] = 2;
-			}else if ((int)_bDataIn[14]>99){
 				LengthOfNum[IndexLengthOfNum] = 3;
+			}else if ((int)_bDataIn[14]>99){
+				LengthOfNum[IndexLengthOfNum] = 2;
 			}else{
 				LengthOfNum[IndexLengthOfNum] = 1;
 			}
@@ -103,7 +102,6 @@ public class ConvertDataIn {
 				_inDatabase = false;
 				
 					for (j = 2; j < 14; j++) { // Check Database
-						System.out.println(_Database[j][1]);
 						if (_Database[j][1].equals(_sTemp)) {
 							_inDatabase = true;
 							break;
@@ -126,7 +124,8 @@ public class ConvertDataIn {
 			}else{////////////////////////////////////////////////
 			_saDataOut = new String[5];
 			_inDatabase = false;
-			_sTemp = _sDataIn.substring(1,14);
+			_sTemp = _sDataIn.substring(1,LengthOfProductID+1);
+			
 			for (j = 2; j < 14; j++) { // Check Database
 				if (_Database[j][1].equals(_sTemp)) {
 					_inDatabase = true;
@@ -142,10 +141,11 @@ public class ConvertDataIn {
 				_saDataOut[1] = _Database[j][1];
 				_saDataOut[2] = _Database[j][2];
 				_saDataOut[3] = _Database[j][3];
-				_saDataOut[4] = _sDataIn.substring(14,15);
+				_saDataOut[4] = _sDataIn.substring(LengthOfProductID+ 1 ,LengthOfProductID+ 1+ LengthOfNum[0]);
+
 			}else
 				_saDataOut[0] = "Not Found";
-			    _saDataOut[1]=_sDataIn.substring(1,14);
+			    _saDataOut[1]=_sDataIn.substring(1,LengthOfProductID+1);
 			
 		}
 		return _saDataOut;
