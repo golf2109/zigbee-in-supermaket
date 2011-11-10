@@ -31,6 +31,10 @@ public class WriteFile {
 	int num =0;
 	boolean done=false; 
 	int i=0;
+	/*
+	 * Write Data _d[][] into file _sPath
+	 * 
+	 */
 	public void  WriteExcel(String _sPath)
 			throws IOException, WriteException {
 			File file = new File(_sPath);

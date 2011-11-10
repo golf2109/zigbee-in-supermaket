@@ -155,7 +155,7 @@ public class MainGui extends JFrame {
 		this.setBackground(new Color(255, 102, 0));
 		this.setTitle("Casher");
 		this.setVisible(true);
-		this.setLocation(350, 70);
+		this.setLocation(350, 10);
 		this.setContentPane(getJContentPane());
 	}
 
