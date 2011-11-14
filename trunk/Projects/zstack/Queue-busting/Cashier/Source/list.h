@@ -9,7 +9,7 @@
  */
 typedef struct List{
   struct  List *next;
-  uint8 pData[BASKET_ID_LEN];
+  uint8 pData[20];
   uint8 len;
 } Buf;
 /*********************************************************************

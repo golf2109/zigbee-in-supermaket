@@ -25,6 +25,7 @@ extern uint8* basket_id_sent;
 //For data retrieve
 static bool Check_basket_id_format(char* id);
 static bool Check_basket_id(char* id);
+static uint8 Check_utilize_products(char* data);
 //For Barcode Scanner
 void UART_Scanner_Init(void);
 //For PC
@@ -42,4 +43,5 @@ void cashier_Init( byte task_id );
 uint16 cashier_ProcessEvent( byte task_id, UINT16 events );
 void HandleKeys( byte shift, byte keys );
 void SendMessage(afAddrType_t dstAddr, char* message);
+void SendBasketToPC(afIncomingMSGPacket_t *MSGpkt);
 #endif
