@@ -54,7 +54,7 @@ void UART_PC_Init(void){
   
   uConfig.configured           = TRUE;
   uConfig.baudRate             = UART_PC_BAUD;
-  uConfig.flowControl          = TRUE;
+  uConfig.flowControl          = FALSE;
   uConfig.flowControlThreshold = UART_PC_THRESH;
   uConfig.rx.maxBufSize        = UART_PC_RX_SIZE;
   uConfig.tx.maxBufSize        = UART_PC_TX_SIZE;
