@@ -110,7 +110,7 @@ public class Read implements Runnable, SerialPortEventListener {
 	 */
 	public void run() {
 			try {
-				Thread.sleep(20);
+				Thread.sleep(20000);
 			} catch (InterruptedException e) {
 				System.out.println("Exception run");
 				
