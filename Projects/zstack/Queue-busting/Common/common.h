@@ -43,10 +43,16 @@ typedef struct {
  */
 //======For Handheld
 #define REQUEST_BASKET			'%'	//request for basket_id
+#define REPONSE_BASKET			'H'
 #define DEL_BASKET			'^'	//del basket_id
-#define ALL_BASKET                       "all"
-#define ALL_BASKET_SIZE                  3
-
+#define STATUS_REQ                      'S'
+/***
+* -Deleting req: '^'+num+{Basket IDs}; //num=0: delete all, other: the number of basket deleted
+* -Status req: 'S'
+* -Status rep: 'S'+[MAC addr]+[Short Addr]+[Parent Addr]
+* -Basket req: '%'+[Basket ID]
+* -Basket rep: 'H'+[Short Addr]+[Basket ID len]+[Product ID len]+[Basket]
+*/
 #define ADD_PRODS_CODE			'&'	//add product to basket
 #define DEL_PRODS_CODE			'*'	//del product out of basket
 #define CHANGE_PRODS_LABEL		'@'	//change lable for data

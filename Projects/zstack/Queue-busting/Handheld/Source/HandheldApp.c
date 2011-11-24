@@ -239,6 +239,7 @@ UINT16 HandheldApp_ProcessEvent( byte task_id, UINT16 events )
 
         case ZDO_STATE_CHANGE:
           HandheldApp_NwkState = (devStates_t)(MSGpkt->hdr.status);
+          HalLedSet( HAL_LED_2,HAL_LED_MODE_TOGGLE);
           if ( (HandheldApp_NwkState == DEV_ZB_COORD)
               || (HandheldApp_NwkState == DEV_ROUTER)
               || (HandheldApp_NwkState == DEV_END_DEVICE) )
@@ -247,10 +248,9 @@ UINT16 HandheldApp_ProcessEvent( byte task_id, UINT16 events )
             //osal_start_timerEx( HandheldApp_TaskID,
             //                    HANDHELDAPP_SEND_MSG_EVT,
              //                   HANDHELDAPP_SEND_MSG_TIMEOUT );
+            HalLedSet( HAL_LED_2, HAL_LED_MODE_OFF );
           }else if(HandheldApp_NwkState== DEV_NWK_ORPHAN)
-#if defined( LCD_SUPPORTED )
-             printText("Disconnect",11);
-#endif
+            HalLedSet( HAL_LED_2, HAL_LED_MODE_ON );
           break;
 
         default:
@@ -300,20 +300,27 @@ UINT16 HandheldApp_ProcessEvent( byte task_id, UINT16 events )
  */
 void HandheldApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
 { 
- Basket *pBasket;
- uint8 tmp[5];
+ byte *pBasketFrame;
+ uint16 len,uiTmp;
+ uint8 tmp[11];
+ uint8 i;
   switch ( pkt->clusterId )
   {
     case HANDHELDAPP_CLUSTERID:
       if(pkt->cmd.Data[0]== REQUEST_BASKET)
       {
-        pBasket =ReadBasket(pkt->cmd.Data+1);
-        if(pBasket)
+        pBasketFrame =ReadBasket(pkt->cmd.Data+1,&len);
+        pBasketFrame[0]=REPONSE_BASKET;
+        uiTmp=NLME_GetShortAddr();
+        pBasketFrame[1]=(uiTmp>>8)&0xff;
+        pBasketFrame[2]=uiTmp&0xff;
+        pBasketFrame[3]=BASKET_ID_LEN;
+        pBasketFrame[4]=PRODS_ID_LEN;
+        if(pBasketFrame)
         {
           if ( AF_DataRequest( &pkt->srcAddr, &HandheldApp_epDesc,
-                         HANDHELDAPP_CLUSTERID,BASKET_ID_LEN+PRODS_NUM_SIZE+
-                         (pBasket->len)*(sizeof(Product)),
-                         (byte *)pBasket,
+                         HANDHELDAPP_CLUSTERID,len,
+                         (byte *)pBasketFrame,
                          &HandheldApp_TransID,
                          AF_DISCV_ROUTE|AF_ACK_REQUEST, AF_DEFAULT_RADIUS ) == afStatus_SUCCESS )
           {
@@ -326,18 +333,32 @@ void HandheldApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
         }
       }else if(pkt->cmd.Data[0]== DEL_BASKET)
       {
-        if(IsSameString(pkt->cmd.Data+1,ALL_BASKET,ALL_BASKET_SIZE))
+        if(pkt->cmd.Data[1]==DEL_BASKET)
+        {
           //Erase all basket
           FlashReset();
+        }
         else//Erase the Basket
-          EraseBasket(pkt->cmd.Data+1);
-      }else if(pkt->cmd.Data[0]== '!')//send Status
+        {
+          i=0;
+          while(i<pkt->cmd.Data[1])
+          {
+            EraseBasket(pkt->cmd.Data+2+i*(BASKET_ID_LEN));
+            i++;
+          }
+        }
+      }else if(pkt->cmd.Data[0]== STATUS_REQ)//send Status
       {
-        tmp[0]='!';
-        tmp[1]=NLME_GetShortAddr();
-        tmp[3]=NLME_GetCoordShortAddr();
+        tmp[0]=STATUS_REQ;
+        CopyString(&tmp[1],NLME_GetExtAddr(),6);
+        uiTmp=NLME_GetShortAddr();
+        tmp[7]=(uiTmp>>8)&0xff;
+        tmp[8]=(uiTmp)&0xff;
+        uiTmp=NLME_GetCoordShortAddr();
+        tmp[9]=(uiTmp>>8)&0xff;
+        tmp[10]=(uiTmp)&0xff;
         if ( AF_DataRequest( &pkt->srcAddr, &HandheldApp_epDesc,
-                         HANDHELDAPP_CLUSTERID,5,
+                         HANDHELDAPP_CLUSTERID,11,
                          (byte *)tmp,
                          &HandheldApp_TransID,
                          AF_DISCV_ROUTE|AF_ACK_REQUEST, AF_DEFAULT_RADIUS ) == afStatus_SUCCESS )
