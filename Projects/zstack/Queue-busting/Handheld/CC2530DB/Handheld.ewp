@@ -1340,7 +1340,7 @@
           <state>xMT_TASK</state>
           <state>xMT_SYS_FUNC</state>
           <state>xMT_ZDO_FUNC</state>
-          <state>LCD_SUPPORTED</state>
+          <state>xLCD_SUPPORTED</state>
           <state>HAL_UART=TRUE</state>
         </option>
         <option>
@@ -2403,7 +2403,7 @@
           <state>xMT_TASK</state>
           <state>xMT_SYS_FUNC</state>
           <state>xMT_ZDO_FUNC</state>
-          <state>LCD_SUPPORTED</state>
+          <state>xLCD_SUPPORTED</state>
           <state>HAL_UART=TRUE</state>
           <state>xPOWER_SAVING</state>
         </option>
@@ -2486,7 +2486,7 @@
         <option>
           <name>CCAllowList</name>
           <version>1</version>
-          <state>11101</state>
+          <state>11111</state>
         </option>
         <option>
           <name>CCObjUseModuleName</name>

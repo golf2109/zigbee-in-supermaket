@@ -16,14 +16,14 @@
 *
 */
 typedef struct Product{
-  uint8* id;
+  uint8 id[PRODS_ID_LEN];
   uint8  num;
 }Product;
 /*
 *
 */
 typedef struct {
-	char* id;
+	char id[BASKET_ID_LEN];
 	uint8 len;
 	Product prods[MAX_PRODS];
 }Basket;
@@ -37,6 +37,7 @@ typedef struct {
  */
 #define CONFIG_MODE	1		//only use when user config from scanner
 #define NORMAL_MODE	2		//normal operation
+
 /*********************************************************************
  * CODE
  */
@@ -46,8 +47,8 @@ typedef struct {
 #define ALL_BASKET                       "all"
 #define ALL_BASKET_SIZE                  3
 
-#define ADD_PRODS_CODE			'+'	//add product to basket
-#define DEL_PRODS_CODE			'-'	//del product out of basket
+#define ADD_PRODS_CODE			'&'	//add product to basket
+#define DEL_PRODS_CODE			'*'	//del product out of basket
 #define CHANGE_PRODS_LABEL		'@'	//change lable for data
 
 
@@ -85,9 +86,6 @@ typedef struct {
 /*********************************************************************
  * COMMON VARIABLES
  */
-extern uint8 mode;
-extern uint8 basket_id_len;
-extern uint8 product_id_len;
 
 /*********************************************************************
  * COMMON FUNCTIONS

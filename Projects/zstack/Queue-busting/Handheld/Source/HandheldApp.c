@@ -227,6 +227,7 @@ UINT16 HandheldApp_ProcessEvent( byte task_id, UINT16 events )
           if ( sentStatus != ZSuccess )
           {
             // The data wasn't delivered -- Do something
+            HalLedSet( HAL_LED_4, HAL_LED_MODE_ON );
           }else{
             ;
           }
@@ -300,6 +301,7 @@ UINT16 HandheldApp_ProcessEvent( byte task_id, UINT16 events )
 void HandheldApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
 { 
  Basket *pBasket;
+ uint8 tmp[5];
   switch ( pkt->clusterId )
   {
     case HANDHELDAPP_CLUSTERID:
@@ -329,6 +331,23 @@ void HandheldApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
           FlashReset();
         else//Erase the Basket
           EraseBasket(pkt->cmd.Data+1);
+      }else if(pkt->cmd.Data[0]== '!')//send Status
+      {
+        tmp[0]='!';
+        tmp[1]=NLME_GetShortAddr();
+        tmp[3]=NLME_GetCoordShortAddr();
+        if ( AF_DataRequest( &pkt->srcAddr, &HandheldApp_epDesc,
+                         HANDHELDAPP_CLUSTERID,5,
+                         (byte *)tmp,
+                         &HandheldApp_TransID,
+                         AF_DISCV_ROUTE|AF_ACK_REQUEST, AF_DEFAULT_RADIUS ) == afStatus_SUCCESS )
+          {
+            // Successfully requested to be sent.
+          }
+          else
+          {
+            // Error occurred in request to send.
+          }
       }
       // "the" message
 #if defined( LCD_SUPPORTED )

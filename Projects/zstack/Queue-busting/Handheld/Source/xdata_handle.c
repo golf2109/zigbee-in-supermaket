@@ -69,7 +69,7 @@ ST_uint32 FindBasket(uint8 *pID)
   {
     addr=(ST_uint32)(START_ADDRESS+FLASH_HEADER_SIZE+InfoBaskets.size*i);
     FlashRead(addr,(ST_uint8*)tmp,BASKET_FLAG_SIZE+BASKET_ID_LEN);
-    if(pMember->flag && IsSameString((uint8*)tmp+1,pID,BASKET_ID_LEN))
+    if(tmp[0] && IsSameString((uint8*)tmp+1,pID,BASKET_ID_LEN))
       rt=addr;
     i++;
   }
