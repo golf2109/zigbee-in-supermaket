@@ -16,45 +16,39 @@
 *
 */
 typedef struct Product{
-  uint8 id[PRODS_ID_LEN];
+  uint8* id;
   uint8  num;
 }Product;
 /*
 *
 */
 typedef struct {
-	char id[BASKET_ID_LEN];
+	char* id;
 	uint8 len;
 	Product prods[MAX_PRODS];
 }Basket;
 /*********************************************************************
  * DATA FROM PC
  */
-#define PC_CMD_LEN		8		//len of command
-#define PC_CMD_FORMAT		'$'		//len of command
+//[] [len] [cmd]
+#define PC_CMD_P2P		'p'
+#define PC_CMD_BRD		'b'
 /*********************************************************************
  * MODE
  */
 #define CONFIG_MODE	1		//only use when user config from scanner
 #define NORMAL_MODE	2		//normal operation
-
 /*********************************************************************
  * CODE
  */
 //======For Handheld
 #define REQUEST_BASKET			'%'	//request for basket_id
-#define REPONSE_BASKET			'H'
 #define DEL_BASKET			'^'	//del basket_id
-#define STATUS_REQ                      'S'
-/***
-* -Deleting req: '^'+num+{Basket IDs}; //num=0: delete all, other: the number of basket deleted
-* -Status req: 'S'
-* -Status rep: 'S'+[MAC addr]+[Short Addr]+[Parent Addr]
-* -Basket req: '%'+[Basket ID]
-* -Basket rep: 'H'+[Short Addr]+[Basket ID len]+[Product ID len]+[Basket]
-*/
-#define ADD_PRODS_CODE			'&'	//add product to basket
-#define DEL_PRODS_CODE			'*'	//del product out of basket
+#define ALL_BASKET                      '0'
+#define ALL_BASKET_SIZE                  3
+
+#define ADD_PRODS_CODE			'+'	//add product to basket
+#define DEL_PRODS_CODE			'-'	//del product out of basket
 #define CHANGE_PRODS_LABEL		'@'	//change lable for data
 
 
@@ -92,6 +86,9 @@ typedef struct {
 /*********************************************************************
  * COMMON VARIABLES
  */
+extern uint8 mode;
+extern uint8 basket_id_len;
+extern uint8 product_id_len;
 
 /*********************************************************************
  * COMMON FUNCTIONS

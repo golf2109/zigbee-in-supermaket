@@ -28,7 +28,6 @@
  */
 afAddrType_t BrdAddr;	//broadcast addr
 afAddrType_t DesAddr;	//destination addr
-afAddrType_t SrcAddr;	//source addr
 
 volatile uint8 have_basket;   //take role as signal
 volatile uint8 have_pccmd;   //take role as signal
@@ -36,8 +35,12 @@ volatile uint8 ready_bcast;   //take role as signal
 volatile uint8 to_com;   //take role as signal
 uint8 add_remove_mode;    //add or remove products
 uint8* basket_id_sent;
+uint8* pc_cmd_buff;
 uint8 basket_recv[BASKET_ID_LEN];
 uint8 basket_sent[BASKET_ID_LEN];
+
+byte pc_cmd_trans;
+
 /*********************************************************************
  * @brief   Check if it is basket_id format
  *
@@ -47,18 +50,6 @@ uint8 basket_sent[BASKET_ID_LEN];
  */
 static bool Check_basket_id_format(char* id){
   if(*(id) == BASKET_ID_FORMAT)  return TRUE;
-  else return FALSE;
-}
-
-/*********************************************************************
- * @brief   Check if it is basket_id format
- *
- * @param   basket_id
- *
- * @return  TRUE if it's basket id
- */
-static bool Check_pc_cmd_format(char* id){
-  if(*(id) == PC_CMD_FORMAT)  return TRUE;
   else return FALSE;
 }
 
@@ -78,7 +69,8 @@ static uint8 Check_utilize_products(char* data){
   //else if(*(data) == REQUEST_BASKET)  return 3;
   else return 0;
 }
- /*********************************************************************
+
+/*********************************************************************
  * DIGI ME 9210
  */
  
@@ -132,10 +124,15 @@ void cashier_Init( byte task_id ){
   UART_PC_Init();
   UART_Scanner_Init();
   
-  // Setup for the destination address - Group 1
+  // Setup for the broadcast address
   BrdAddr.addrMode = (afAddrMode_t)AddrBroadcast;
   BrdAddr.endPoint = Q_BUSTING_ENDPOINT;
   BrdAddr.addr.shortAddr = 0xffff;
+  
+  // Setup for the broadcast address
+  DesAddr.addrMode = (afAddrMode_t)Addr16Bit;
+  DesAddr.endPoint = Q_BUSTING_ENDPOINT;
+  DesAddr.addr.shortAddr = 0x0000;
   
   // Fill out the endpoint description.
   epDesc.endPoint = Q_BUSTING_ENDPOINT;
@@ -157,7 +154,8 @@ void cashier_Init( byte task_id ){
   HalLedSet ( HAL_LED_1, HAL_LED_MODE_OFF );
   
   // create user buffer for use
-  basket_id_sent = osal_mem_alloc(sizeof(uint8)*(BASKET_ID_LEN+PC_CMD_LEN));
+  basket_id_sent = osal_mem_alloc(sizeof(uint8)*(BASKET_ID_LEN*2));
+  pc_cmd_buff = osal_mem_alloc(sizeof(uint8)*(BASKET_ID_LEN*5));
   add_remove_mode = 0;
   // Start timer 
   /*have_basket = 0;
@@ -232,14 +230,25 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
         break;
     case UART_PC_EVENT:
       HalLedSet ( HAL_LED_4, HAL_LED_MODE_ON );
-      pc_buff = bufPop(pc_buff, basket_id_sent, &len);
-      *(basket_id_sent+BASKET_ID_LEN) = 0x0d;
-  
-      if(Check_pc_cmd_format((char*)basket_id_sent)){
-        SendMessage(BrdAddr, (char*)basket_id_sent);
-        HalUARTWrite(UART_PC_PORT, basket_id_sent, PC_CMD_LEN+1);
+      pc_buff = bufPop(pc_buff, pc_cmd_buff, &len);
+      HalUARTWrite(UART_PC_PORT, (char*)pc_cmd_buff, len);
+      //*(pc_cmd_buff+len) = 0x0d;
+      
+      if(*(pc_cmd_buff) == PC_CMD_P2P){
+        byte saddr1 = *(pc_cmd_buff+1);
+        byte saddr2 = *(pc_cmd_buff+2);
+        DesAddr.addr.shortAddr = saddr1<<2 | saddr2;
+        HalUARTWrite(UART_PC_PORT, (char*)DesAddr.addr.shortAddr, 2);
+        HalUARTWrite(UART_PC_PORT, (pc_cmd_buff+3), len-3);
+        //SendMessage(DesAddr, (char*)(pc_cmd_buff+3));
       }
+      else if(*(pc_cmd_buff) == PC_CMD_BRD){
+        SendMessage(BrdAddr, (char*)(pc_cmd_buff+1));
+      }
+      else{}
+      
       break;
+      
     default:
       break;
   }
@@ -267,8 +276,11 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
           (void)sentEP;
           (void)sentTransID;          
           // Action taken when confirmation is received.
+          if(sentTransID == pc_cmd_trans)
+            HalUARTWrite(UART_PC_PORT, "Delete OK", osal_strlen("Delete OK"));
           if ( sentStatus != ZSuccess ){
             // The data wasn't delivered -- Do something
+            HalUARTWrite(UART_PC_PORT, "Cant Delete", osal_strlen("Cant Delete"));
           }
           break;
 
@@ -413,11 +425,7 @@ void SendBasketToPC(afIncomingMSGPacket_t *MSGpkt){
     osal_memcpy((data+3),MSGpkt->cmd.Data, MSGpkt->cmd.DataLength);
     //send data to PC
     HalUARTWrite(UART_PC_PORT, data, len);
-    //send command to delete received basket_id to handhled
-    /*DesAddr = MSGpkt->srcAddr;
-    *(basket_id_sent) = DEL_BASKET;
-    SendMessage(DesAddr,(char*)basket_id_sent);
-    osal_memset(basket_id_sent,0,basket_id_len+PC_CMD_LEN);*/
+    //get address of handheld
     osal_mem_free(data);
   }
   //turn of the light to signal that cashier ready to process the next basket_id
