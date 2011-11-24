@@ -26,7 +26,7 @@
 /**Defines*/
 #define  START_ADDRESS      0x000080
 #define  FLASH_HEADER_SIZE  0x03
-#define  BASKET_FLAG        "&"
+#define  BASKET_FLAG        "H"
 #define  BASKET_FLAG_SIZE   0x01
 /**Flash Header*/
 typedef   struct{
@@ -40,6 +40,7 @@ typedef   struct{
 }FlashMember;
 /**Point to Basket read*/
 static FlashMember   *pMember;
+static byte * pBasketFrame;
 /**Store processing Flash Header*/
 static FlashHeader  InfoBaskets;
 /**
@@ -79,20 +80,24 @@ ST_uint32 FindBasket(uint8 *pID)
 * @fn     ReadBasket
 * @brief
 * @param  pID, note: pMember
-* @return NULL: not found, other:found
+* @return NULL: not found, other:found [5]+Basket
 */
-Basket* ReadBasket(uint8 *pID)
+byte * ReadBasket(uint8 *pID,uint16 *len)
 {
   ST_uint32  addr;
   addr = FindBasket(pID);
   if(addr){
-    if(pMember==NULL)
-      pMember=(FlashMember *)osal_mem_alloc(sizeof(FlashMember));
+    if(pBasketFrame==NULL)
+    {
+      pBasketFrame=(void*)osal_mem_alloc(sizeof(FlashMember)+4);
+      pMember=(FlashMember *)(pBasketFrame)+4;
+    }
     FlashRead((ST_uint32)addr,
               (ST_uint8*)(pMember),BASKET_FLAG_SIZE+BASKET_ID_LEN+PRODS_NUM_SIZE);
     FlashRead((ST_uint32)addr+BASKET_FLAG_SIZE+BASKET_ID_LEN+PRODS_NUM_SIZE,
               (ST_uint8*)(pMember->data.prods),(pMember->data.len)*(sizeof(Product)));
-    return &pMember->data;
+    *len = BASKET_ID_LEN+PRODS_NUM_SIZE+(uint16)((pMember->data.len)*(sizeof(Product)));
+    return pBasketFrame;
   }else
     return NULL;
 }
