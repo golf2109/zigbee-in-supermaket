@@ -101,13 +101,18 @@ HAL_ISR_FUNCTION(ReadScanner,URX1_VECTOR){
 static void UART_PC_process_evt(uint8 port, uint8 event){
   
   (void) port;
+  uint8 i=0;
   //read command from PC and then push it to pc_buff
   //if (event && (HAL_UART_RX_FULL | HAL_UART_RX_ABOUT_FULL)){
   uint16 len = Hal_UART_RxBufLen (UART_PC_PORT);
   if(len){
-    uint8 tmp[80];
+    uint8 tmp[32];
     HalUARTRead(UART_PC_PORT, tmp, len);
-    pc_buff = bufPush(pc_buff, tmp, len);
-    osal_set_event(Cashier_TaskID, UART_PC_EVENT);
+    for(i=0;i<len;i++){
+      if(tmp[i]=='$'){
+        pc_buff = bufPush(pc_buff, tmp, len);
+        osal_set_event(Cashier_TaskID, UART_PC_EVENT);
+      }
+    }
   }
 }

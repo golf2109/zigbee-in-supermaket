@@ -150,6 +150,7 @@ public class Read implements Runnable, SerialPortEventListener {
 		case SerialPortEvent.DATA_AVAILABLE:
 
 			try {
+				Thread.sleep(500);
 				while (inputStream.available() > 0) {
 					numBytes = inputStream.read(readBuffer);
 					
@@ -167,6 +168,9 @@ public class Read implements Runnable, SerialPortEventListener {
 				
 					
 			} catch (IOException e) {
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 
 			break;
