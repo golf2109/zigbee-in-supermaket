@@ -40,7 +40,7 @@ typedef   struct{
 }FlashMember;
 /**Point to Basket read*/
 static FlashMember   *pMember;
-static byte * pBasketFrame;
+static byte * pBasketRep;
 /**Store processing Flash Header*/
 static FlashHeader  InfoBaskets;
 /**
@@ -87,17 +87,17 @@ byte * ReadBasket(uint8 *pID,uint16 *len)
   ST_uint32  addr;
   addr = FindBasket(pID);
   if(addr){
-    if(pBasketFrame==NULL)
+    if(pBasketRep==NULL)
     {
-      pBasketFrame=(void*)osal_mem_alloc(sizeof(FlashMember)+4);
-      pMember=(FlashMember *)(pBasketFrame)+4;
+      pBasketRep=(byte*)osal_mem_alloc(sizeof(FlashMember)+4);
+      pMember=(FlashMember *)(pBasketRep+4);
     }
     FlashRead((ST_uint32)addr,
               (ST_uint8*)(pMember),BASKET_FLAG_SIZE+BASKET_ID_LEN+PRODS_NUM_SIZE);
     FlashRead((ST_uint32)addr+BASKET_FLAG_SIZE+BASKET_ID_LEN+PRODS_NUM_SIZE,
               (ST_uint8*)(pMember->data.prods),(pMember->data.len)*(sizeof(Product)));
-    *len = BASKET_ID_LEN+PRODS_NUM_SIZE+(uint16)((pMember->data.len)*(sizeof(Product)));
-    return pBasketFrame;
+    *len = BASKET_ID_LEN+PRODS_NUM_SIZE+(uint16)((pMember->data.len)*(sizeof(Product)))+5;
+    return pBasketRep;
   }else
     return NULL;
 }

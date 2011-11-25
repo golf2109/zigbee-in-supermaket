@@ -3,69 +3,70 @@
 
 #include <hal_types.h>
 
-/*********************************************************************
- * DATA FOR BASKET
+/**
+ * Defines
  */
 
 #define MAX_PRODS		25		//max products in one basket
-#define PRODS_ID_LEN		13		//len of product_id
-#define BASKET_ID_LEN		8		//BASKET_ID_FORMAT +7
 #define BASKET_ID_FORMAT        '#'
 #define PRODS_NUM_SIZE          1
+
 /*
-*
-*/
+ * Product Data structure
+ */
+#define PRODS_ID_LEN		13		//len of product_id
 typedef struct Product{
-  uint8* id;
+  uint8 id[PRODS_ID_LEN];
   uint8  num;
 }Product;
 /*
-*
-*/
+ * Basket Data Structure
+ */
+#define BASKET_ID_LEN		8		//BASKET_ID_FORMAT +7
 typedef struct {
-	char* id;
+	char id[BASKET_ID_LEN];
 	uint8 len;
 	Product prods[MAX_PRODS];
 }Basket;
+/**
+* Define request/respone to/from Handheld
+*/
+#define REQUEST_BASKET			'%'	//request for basket_id
+#define REPONSE_BASKET			'H'
+#define DEL_BASKET			'^'	//del basket_id
+#define STATUS_REQ                      'S'
+#define STATUS_RESP_LEN                  11
+/**
+* Frame format for request/respone to/from Handheld:
+*
+* -Deleting req: '^'+num+{Basket IDs}; //num=0: delete all, other: the number of basket deleted
+* -Status req: 'S'
+* -Status resp: 'S'+[MAC addr:6bytes]+[Short Addr:2bytes]+[Parent Addr:2bytes]
+* -Basket req: '%'+[Basket ID]
+* -Basket resp: 'H'+[Short Addr]+[Basket ID len]+[Product ID len]+[Basket]
+*/
+
 /*********************************************************************
  * DATA FROM PC
  */
 //[] [len] [cmd]
 #define PC_CMD_P2P		'p'
 #define PC_CMD_BRD		'b'
+
+#define ADD_PRODS_CODE			'+'	//add product to basket
+#define DEL_PRODS_CODE			'-'	//del product out of basket
+#define CHANGE_PRODS_LABEL		'@'	//change lable for data
 /*********************************************************************
  * MODE
  */
 #define CONFIG_MODE	1		//only use when user config from scanner
 #define NORMAL_MODE	2		//normal operation
-/*********************************************************************
- * CODE
- */
-//======For Handheld
-#define REQUEST_BASKET			'%'	//request for basket_id
-#define DEL_BASKET			'^'	//del basket_id
-#define ALL_BASKET                      '0'
-#define ALL_BASKET_SIZE                  3
-
-#define ADD_PRODS_CODE			'+'	//add product to basket
-#define DEL_PRODS_CODE			'-'	//del product out of basket
-#define CHANGE_PRODS_LABEL		'@'	//change lable for data
-
-
 
 /*********************************************************************
  * SECURITY
  */
 #define KEY_SEC		0x123		//use for security
 
-/*********************************************************************
- * CONNECT TO PC
- */
- 
- /*********************************************************************
- * SERIAL
- */
- 
 /*********************************************************************
  * ZIGBEE
  */
