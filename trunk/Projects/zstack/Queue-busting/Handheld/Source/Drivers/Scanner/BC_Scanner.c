@@ -1,3 +1,7 @@
+/**
+ * @file BC_Scanner.c
+ *
+ */
 #include "hal_uart.h"
 #include "OSAL.h"
 #include "buffer.h"
@@ -74,7 +78,5 @@ void BC_Scanner_CallBack(uint8 port, uint8 event){
       }
       rx_buf_len -=count;
     }
-    printText((char*)tmp_buf,3);
-    
   }
 }
