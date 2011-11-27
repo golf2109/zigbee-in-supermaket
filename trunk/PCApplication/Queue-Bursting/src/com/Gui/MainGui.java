@@ -33,6 +33,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.BevelBorder;
@@ -42,9 +44,6 @@ import javax.swing.table.JTableHeader;
 import com.ConvertDataIn;
 import com.Excel.WriteFile;
 import com.Uart.Read;
-import javax.swing.ListSelectionModel;
-
-import jxl.write.WriteException;
 
 public class MainGui extends JFrame {
 
@@ -94,13 +93,15 @@ public class MainGui extends JFrame {
 	private JRadioButton jUARTRadioButton = null;
 	private JRadioButton jEthernetRadioButton = null;
 	private JPanel jEthernetPanel = null;
-	private JScrollPane jTableScrollPane = null;
+	private static JScrollPane jTableScrollPane = null;
 	private static JTable jTable = null;
 	JTextPane jTextPaneHcmut =null;
 	JTextPane jTextPaneQueueBrusting =null;
 	JTextPane jTextPaneDatalogic =null;
-	static String [][] _c = new String[5000][5];
+	static String [][] 	_c = new String[5000][5];
 	static String col[] = {"Index","ProductID","ProductName","Price","NumOfProduct"};
+	
+	public static String defaultPort = " ";
 	/**
 	 * This is the default constructor
 	 */
@@ -240,7 +241,7 @@ public class MainGui extends JFrame {
 					if(jUARTRadioButton.isSelected()){
 						boolean portFound = false;
 	
-						String defaultPort = choice.getSelectedItem();
+						defaultPort = choice.getSelectedItem();
 						portList = CommPortIdentifier.getPortIdentifiers();
 	
 						while (portList.hasMoreElements()) {
@@ -253,7 +254,9 @@ public class MainGui extends JFrame {
 										jLabel1text.setText(choice.getSelectedItem()+ " is busy");
 										choice.setEnabled(true);
 										ErrorGui.Type = "error";
-										ErrorGui.content = choice.getSelectedItem()+ " is used by another program";
+										ErrorGui.content1 = choice.getSelectedItem()+ " is used by another program";
+										ErrorGui.content2 = "";
+
 									}
 									else{
 										jLabel1text.setText("Receive Data From "+ choice.getSelectedItem());
@@ -262,7 +265,8 @@ public class MainGui extends JFrame {
 										jButtonDisconnect.setEnabled(true);
 										jButtonCheckComPort.setEnabled(false);
 										ErrorGui.Type = "message";
-										ErrorGui.content = "Begin Receive Data From "+ choice.getSelectedItem();
+										ErrorGui.content1 = "Begin Receive Data From "+ choice.getSelectedItem();
+										ErrorGui.content2 = "";
 									}
 								}
 							}
@@ -270,7 +274,8 @@ public class MainGui extends JFrame {
 						if (!portFound) {
 							jLabel1text.setText("Port not found.");
 							ErrorGui.Type = "error";
-							ErrorGui.content = "Port not found";
+							ErrorGui.content1 = "Port not found";
+							ErrorGui.content2 = "";
 						}
 						StatusGui = new ErrorGui();
 					}else if(jEthernetRadioButton.isSelected()){
@@ -505,7 +510,35 @@ public class MainGui extends JFrame {
 		}
 		return choice;
 	}
-
+	public static void HandleError(){
+		ConvertDataIn _testGetData = new ConvertDataIn();
+		String _a = _testGetData.ConvertDataFromBoard(Read.readBuffer, 2);
+		//String _b = _testGetData.GetDataFromDatabase(PathDatabase, _a, 0);
+		String _Content1 = "";
+		String _Content2 = "";
+		switch(ConvertDataIn.ErrorID){
+			case 1:
+				_Content1 = "Can't delete Packet: " + _a; 
+				_Content2 = "Handheld Mac Address: " + ConvertDataIn.MacAdd;  
+				break;
+			case 2:
+				_Content1 = "Can't find Packet " + _a;
+				_Content2 = "Please checkout again";
+				break;
+		}//end switch
+		ErrorGui.Type = "Error";
+		ErrorGui.content1 = _Content1;
+		ErrorGui.content2 = _Content2;
+		ConvertDataIn.WriteLog(_Content1 + ". " + _Content2);
+		StatusGui = new ErrorGui();
+//		System.out.println(ConvertDataIn.ErrorID);
+//		System.out.println(_a);
+	}
+	public static void HandleStatus(){
+		ConvertDataIn _testGetData = new ConvertDataIn();
+		String _a = _testGetData.ConvertDataFromBoard(Read.readBuffer, 3);
+		System.out.println(_a);
+	}
 	public static void ProcessData(int _iType){
     	 	ConvertDataIn _testGetData = new ConvertDataIn();
 			int t=0;
@@ -517,6 +550,7 @@ public class MainGui extends JFrame {
 			if(_iType ==0){
 				_a = _testGetData.ConvertDataFromBoard(Read.readBuffer, 0);
 				_b = _testGetData.GetDataFromDatabase(PathDatabase, _a, 0);
+				
 				length_d=0;
 				_c[numofline++][0] = "Packet ID:  "+_b[0].substring(0,ConvertDataIn.LengthOfPacketID)+": "+_b[0].substring(ConvertDataIn.LengthOfPacketID,_b[0].length());
 				_d[numofpacket][length_d++] =_b[0].substring(0,ConvertDataIn.LengthOfPacketID);
@@ -537,14 +571,15 @@ public class MainGui extends JFrame {
 					
 					
 				}
-				_c[++numofline][3] ="Total";
-				_c[numofline++][4] =_total+ "";
-				
+				_c[++numofline][3] ="Total:          "+ _total ;
+				numofline++;
 				total += _total; // total price all packet
 				JTableHeader header = jTable.getTableHeader();
 				header.setBackground(Color.blue);
 				jTable.updateUI();
-				
+				jTable.getSelectionModel().setSelectionInterval(numofline, 1);
+				jTable.scrollRectToVisible(new Rectangle(jTable.getCellRect(numofline, 0, true)));
+
 				jLabel1Total.setText("Total: ");
 				jLabel1Money.setText(total+" ");
 				NumOfNumProduct[numofpacket++]=_testGetData.iNumOfTypeProduct;
@@ -554,6 +589,8 @@ public class MainGui extends JFrame {
 				_a = _testGetData.ConvertDataFromBoard(Read.readBuffer, 1);
 				if(_a.substring(0, 1).equals("+")||_a.substring(0, 1).equals("-")){
 				_b = _testGetData.GetDataFromDatabase(PathDatabase, _a, 1);
+				
+				
 				jLabel1PID.setText(_b[0]);
 				length_d=0;
 				_c[numofline][0] =_b[0];
@@ -833,7 +870,9 @@ public class MainGui extends JFrame {
 			jTableScrollPane.setBounds(new Rectangle(15, 105, 737, 406));
 			jTableScrollPane.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
 			jTableScrollPane.setViewportView(getJTable());
-			jTableScrollPane.setAutoscrolls(true);
+			//jTableScrollPane.setAutoscrolls(true);
+			jTableScrollPane.setWheelScrollingEnabled(true);
+		
 			
 		}
 		return jTableScrollPane;

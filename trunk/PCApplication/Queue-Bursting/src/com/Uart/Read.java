@@ -157,11 +157,19 @@ public class Read implements Runnable, SerialPortEventListener {
 				}
 				String _sIdentify = new String(readBuffer).substring(0, 1);
 				switch (_sIdentify.charAt(0)){
-				case 'H':MainGui.ProcessData(0);
-						break;
-				case '+':
-				case '-':MainGui.ProcessData(1);
-						break;
+					case 'H'://Packet 
+							MainGui.ProcessData(0);
+							break;
+					case '+'://Add or Remove Product in Packet
+					case '-':
+							MainGui.ProcessData(1);
+							break;
+					case 'E'://Error 
+							MainGui.HandleError();
+							break;
+					case 'S'://Status
+							MainGui.HandleStatus();
+				
 				default:break;
 				}
 				

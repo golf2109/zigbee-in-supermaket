@@ -1,13 +1,21 @@
 package com;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+
 import com.Excel.ReadFile;
+import com.Uart.Read;
+import com.Uart.Write;
 
 public class ConvertDataIn {
 	
 	public static final String sDATE_FORMAT_NOW = "yyyy_MM_dd_HH_mm_ss";
+	public static final String sDATE_FORMAT_NOW_ = "yyyy/MM/dd HH:mm:ss";
+
 	static String sPathDatabase ="c:/temp/Database.xls";
 	public int iNumOfTypeProduct ;
 	public static String[] saProductIDError =  new String[100];
@@ -15,6 +23,13 @@ public class ConvertDataIn {
 	public static int[] LengthOfNum = new int[5000];
 	public static int LengthOfPacketID = 8;
 	public static int LengthOfProductID = 13;
+	public static int ErrorID;
+	
+	public static int MacAddLen = 6;
+	public static int ShortAddLen = 2;
+	public static int ParentAddLen = 2;
+	public static String MacAdd ="";
+	
 	
 	/* 
 	 * Process data which was recv from the board through COM port
@@ -27,47 +42,65 @@ public class ConvertDataIn {
 		String _sDataIn = new String(_bDataIn);
 		String _sDataOut = "";
 		int IndexLengthOfNum = 0;
-		if (_bType == 0){
-			LengthOfPacketID = _bDataIn[1];
-			LengthOfProductID = _bDataIn[2];
-			_sDataOut += _sDataIn.substring(3, 3+ LengthOfPacketID)+ _bDataIn[3+LengthOfPacketID]; //Get Packet Id and Number Of Type Product
-			iNumOfTypeProduct = _bDataIn[3+ LengthOfPacketID];
-			if (iNumOfTypeProduct>99){
-				LengthOfNum[IndexLengthOfNum++] = 3;
-			}else if (iNumOfTypeProduct>9){
-				LengthOfNum[IndexLengthOfNum++] = 2;
-			}else{
-				LengthOfNum[IndexLengthOfNum++] = 1;
-			}
-			int i = 3+ LengthOfPacketID +1;
-			int _iNumOfEachProduct;
-			while(i < 3+ LengthOfPacketID +1 + iNumOfTypeProduct*(LengthOfProductID+1)){
-				_iNumOfEachProduct = _bDataIn[i+LengthOfProductID];
-				if (_iNumOfEachProduct>99){
+		ErrorID = -1; 
+		switch (_bType){
+			case 0:// normal packet
+				MacAdd = _sDataIn.substring(1, 1 + MacAddLen);
+				LengthOfPacketID = _bDataIn[1 + MacAddLen];
+				LengthOfProductID = _bDataIn[2 + MacAddLen];
+				_sDataOut += _sDataIn.substring(3 + MacAddLen, 3 + MacAddLen + LengthOfPacketID)+ 
+				                                _bDataIn[3 + MacAddLen + LengthOfPacketID]; //Get Packet Id and Number Of Type Product
+				iNumOfTypeProduct = _bDataIn[3 + MacAddLen + LengthOfPacketID];
+				if (iNumOfTypeProduct>99){
 					LengthOfNum[IndexLengthOfNum++] = 3;
-				}else if (_iNumOfEachProduct>9){
+				}else if (iNumOfTypeProduct>9){
 					LengthOfNum[IndexLengthOfNum++] = 2;
 				}else{
 					LengthOfNum[IndexLengthOfNum++] = 1;
 				}
-				
-				_sDataOut += _sDataIn.substring(i, i+LengthOfProductID);
-				_sDataOut += _iNumOfEachProduct;	
-				
-				i += LengthOfProductID +1;
-				
-			}
-			
-		}else{// add and remove
-			_sDataOut = _sDataIn.substring(0, LengthOfProductID+1)+_bDataIn[LengthOfProductID+1];
-			if ((int)_bDataIn[14]>99){
-				LengthOfNum[IndexLengthOfNum] = 3;
-			}else if ((int)_bDataIn[14]>9){
-				LengthOfNum[IndexLengthOfNum] = 2;
-			}else{
-				LengthOfNum[IndexLengthOfNum] = 1;
-			}
-		}
+				int i = 3 + MacAddLen + LengthOfPacketID +1;
+				int _iNumOfEachProduct;
+				while(i < 3 + MacAddLen + LengthOfPacketID +1 + iNumOfTypeProduct*(LengthOfProductID+1)){
+					_iNumOfEachProduct = _bDataIn[i+LengthOfProductID];
+					if (_iNumOfEachProduct>99){
+						LengthOfNum[IndexLengthOfNum++] = 3;
+					}else if (_iNumOfEachProduct>9){
+						LengthOfNum[IndexLengthOfNum++] = 2;
+					}else{
+						LengthOfNum[IndexLengthOfNum++] = 1;
+					}
+					
+					_sDataOut += _sDataIn.substring(i, i+LengthOfProductID);
+					_sDataOut += _iNumOfEachProduct;	
+					
+					i += LengthOfProductID +1;
+					
+				}
+				//delete packet from board
+				String _sDeletePacket = "^";
+				byte _bNum = 1;
+				_sDeletePacket += _bNum + _sDataIn.substring(3 + MacAddLen, 3 + MacAddLen + LengthOfPacketID);
+				if(Read.serialPort != null)
+					Write.SendData(_sDeletePacket);
+				break;
+			case 1:// add and remove product
+				_sDataOut = _sDataIn.substring(0, LengthOfProductID+1)+_bDataIn[LengthOfProductID+1];
+				if ((int)_bDataIn[14]>99){
+					LengthOfNum[IndexLengthOfNum] = 3;
+				}else if ((int)_bDataIn[14]>9){
+					LengthOfNum[IndexLengthOfNum] = 2;
+				}else{
+					LengthOfNum[IndexLengthOfNum] = 1;
+				}
+				break;
+			case 2:// handle Error
+				ErrorID = _bDataIn[1];
+				_sDataOut = _sDataIn.substring(2, 2 + LengthOfPacketID);
+				break;
+			case 3:// handle Status
+				_sDataOut = _sDataIn.substring(1, 1 + MacAddLen);
+				break;
+		}//End Switch
 		return _sDataOut;
 	}
 	
@@ -156,6 +189,39 @@ public class ConvertDataIn {
 		SimpleDateFormat sdf = new SimpleDateFormat(sDATE_FORMAT_NOW);
 		return sdf.format(cal.getTime());
 
+	}
+	public static String now1() {
+		Calendar cal = Calendar.getInstance();
+		SimpleDateFormat sdf = new SimpleDateFormat(sDATE_FORMAT_NOW_);
+		return sdf.format(cal.getTime());
+
+	}
+	public static void WriteLog(String _sInfo){
+			BufferedWriter bufferedWriter = null;
+		
+		try {
+			bufferedWriter = new BufferedWriter(new FileWriter("C:\\temp\\Error.log", true));
+			synchronized (bufferedWriter) {
+				bufferedWriter.write(now1()+" : " + _sInfo );
+				bufferedWriter.newLine();
+				try {
+					// Waiting to get new time 
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (bufferedWriter != null) {
+				try {
+					bufferedWriter.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 	public static String GerneralPathToWrite(String _PacketID) {
 		return "c:/temp/Date " + now() + "__" + _PacketID + ".xls";
