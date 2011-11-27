@@ -7,6 +7,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import java.awt.Dimension;
 
 public class ErrorGui extends JFrame {
 
@@ -16,7 +17,8 @@ public class ErrorGui extends JFrame {
 	private JButton jButtonOK = null;
 	private JLabel jLabelErro = null;
 	public static String Type = "error";
-	public static String content = "error message here";
+	public static String content1 = "error message here";
+	public static String content2 = "more info";
 	/**
 	 * This is the default constructor
 	 */
@@ -31,7 +33,7 @@ public class ErrorGui extends JFrame {
 	 * @return void
 	 */
 	private void initialize() {
-		this.setSize(231, 118);
+		this.setSize(299, 155);
 		this.setContentPane(getJContentPane());
 		this.setVisible(true);
 		this.setAlwaysOnTop(true);
@@ -48,13 +50,17 @@ public class ErrorGui extends JFrame {
 	private JPanel getJContentPane() {
 		if (jContentPane == null) {
 			jLabelErro = new JLabel();
-			jLabelErro.setBounds(new Rectangle(5, 8, 219, 39));
+			jLabelErro.setBounds(new Rectangle(5, 8, 271, 39));
 			jLabelErro.setHorizontalAlignment(SwingConstants.CENTER);
 			jLabelErro.setHorizontalTextPosition(SwingConstants.CENTER);
-			jLabelErro.setText(content);
+			jLabelErro.setText(content1);
+			
 			jLabelError = new JLabel();
-			jLabelError.setText("");
-			jLabelError.setBounds(new Rectangle(0, 2, 216, 46));
+			jLabelError.setBounds(new Rectangle(8, 51, 268, 32));
+			jLabelError.setHorizontalAlignment(SwingConstants.CENTER);
+			jLabelError.setHorizontalTextPosition(SwingConstants.CENTER);
+			jLabelError.setText(content2);
+			
 			jContentPane = new JPanel();
 			jContentPane.setLayout(null);
 			jContentPane.add(jLabelError);
@@ -72,7 +78,7 @@ public class ErrorGui extends JFrame {
 	private JButton getJButtonOK() {
 		if (jButtonOK == null) {
 			jButtonOK = new JButton();
-			jButtonOK.setBounds(new Rectangle(73, 48, 86, 30));
+			jButtonOK.setBounds(new Rectangle(94, 87, 86, 30));
 			jButtonOK.setText("OK");
 			jButtonOK.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
