@@ -13,6 +13,7 @@ import javax.comm.SerialPortEventListener;
 import javax.comm.UnsupportedCommOperationException;
 
 import com.Gui.MainGui;
+import com.Gui.NetworkGui;
 
 public class Read implements Runnable, SerialPortEventListener {
 	static CommPortIdentifier portId;
@@ -168,7 +169,8 @@ public class Read implements Runnable, SerialPortEventListener {
 							MainGui.HandleError();
 							break;
 					case 'S'://Status
-							MainGui.HandleStatus();
+							NetworkGui.HandleStatus();
+							break;
 				
 				default:break;
 				}

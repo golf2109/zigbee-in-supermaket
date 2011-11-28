@@ -44,6 +44,7 @@ import javax.swing.table.JTableHeader;
 import com.ConvertDataIn;
 import com.Excel.WriteFile;
 import com.Uart.Read;
+import com.Uart.Write;
 
 public class MainGui extends JFrame {
 
@@ -102,6 +103,7 @@ public class MainGui extends JFrame {
 	static String col[] = {"Index","ProductID","ProductName","Price","NumOfProduct"};
 	
 	public static String defaultPort = " ";
+	private JButton jButtonNetwork = null;
 	/**
 	 * This is the default constructor
 	 */
@@ -219,6 +221,7 @@ public class MainGui extends JFrame {
 			jContentPane.add(getJTextPaneHcmut(), null);
 			jContentPane.add(getJTextPaneQueueBrusting(), null);
 			jContentPane.add(getJTextPaneDatalogic(), null);
+			jContentPane.add(getJButtonNetwork(), null);
 			setResizable(false);
 		}
 
@@ -513,7 +516,6 @@ public class MainGui extends JFrame {
 	public static void HandleError(){
 		ConvertDataIn _testGetData = new ConvertDataIn();
 		String _a = _testGetData.ConvertDataFromBoard(Read.readBuffer, 2);
-		//String _b = _testGetData.GetDataFromDatabase(PathDatabase, _a, 0);
 		String _Content1 = "";
 		String _Content2 = "";
 		switch(ConvertDataIn.ErrorID){
@@ -531,14 +533,8 @@ public class MainGui extends JFrame {
 		ErrorGui.content2 = _Content2;
 		ConvertDataIn.WriteLog(_Content1 + ". " + _Content2);
 		StatusGui = new ErrorGui();
-//		System.out.println(ConvertDataIn.ErrorID);
-//		System.out.println(_a);
 	}
-	public static void HandleStatus(){
-		ConvertDataIn _testGetData = new ConvertDataIn();
-		String _a = _testGetData.ConvertDataFromBoard(Read.readBuffer, 3);
-		System.out.println(_a);
-	}
+	
 	public static void ProcessData(int _iType){
     	 	ConvertDataIn _testGetData = new ConvertDataIn();
 			int t=0;
@@ -899,6 +895,40 @@ public class MainGui extends JFrame {
 			jTable.setVisible(true);
 		}
 		return jTable;
+	}
+
+	/**
+	 * This method initializes jButtonNetwork	
+	 * 	
+	 * @return javax.swing.JButton	
+	 */
+	private JButton getJButtonNetwork() {
+		if (jButtonNetwork == null) {
+			jButtonNetwork = new JButton();
+			jButtonNetwork.setBounds(new Rectangle(668, 62, 84, 28));
+			jButtonNetwork.setText("Network");
+			jButtonNetwork.addActionListener(new java.awt.event.ActionListener() {
+				public void actionPerformed(java.awt.event.ActionEvent e) {
+					
+					if(Read.serialPort != null){
+						for(int i=0; i < 100; i++)
+							for(int j=0; j<5; j++)
+								_c[i][j]="";
+						NetworkGui.Index = 0;
+						if(NetworkGui.jTable != null)
+							NetworkGui.jTable.updateUI();
+						Write.SendData("S");
+						NetworkGui _network = new NetworkGui();
+					}else{
+						ErrorGui.Type = "Error";
+						ErrorGui.content1 = "Please connect com port";
+						MainGui.StatusGui = new ErrorGui();
+					}
+					
+				}
+			});
+		}
+		return jButtonNetwork;
 	}
 
 	public static void main(String arg[]) {
