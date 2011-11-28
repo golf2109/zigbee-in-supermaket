@@ -29,6 +29,8 @@ public class ConvertDataIn {
 	public static int ShortAddLen = 2;
 	public static int ParentAddLen = 2;
 	public static String MacAdd ="";
+	private static boolean HasReadDatabase = false;
+	static String[][] _Database = null;
 	
 	
 	/* 
@@ -98,7 +100,7 @@ public class ConvertDataIn {
 				_sDataOut = _sDataIn.substring(2, 2 + LengthOfPacketID);
 				break;
 			case 3:// handle Status
-				_sDataOut = _sDataIn.substring(1, 1 + MacAddLen);
+				_sDataOut = _sDataIn.substring(1, 1 + MacAddLen + ShortAddLen + ParentAddLen);
 				break;
 		}//End Switch
 		return _sDataOut;
@@ -118,69 +120,104 @@ public class ConvertDataIn {
 		int _iNumOfTypeProduct = 0;
 		String _sTemp;
 		ReadFile _cReadDataBase = new ReadFile();
-		String[][] _Database = null;
-		try {
-			_Database = _cReadDataBase.ReadExcel(_Path, 14);
-		} catch (IOException e) {
-			System.out.println("Read Database error");
-		}
-		String[] _saDataOut;
-		_saDataOut = new String[4 *iNumOfTypeProduct+1];
-		if(_iType == 0){
-			_saDataOut[0] = _sDataIn.substring(0, i); // packet ID
-			while(i < _sDataIn.length()) {
-				k++;
-				_sTemp = _sDataIn.substring(i, i+ LengthOfProductID);
-				i += LengthOfProductID+ LengthOfNum[k];
-				_inDatabase = false;
-				
-					for (j = 2; j < 14; j++) { // Check Database
-						if (_Database[j][1].equals(_sTemp)) {
-							_inDatabase = true;
-							break;
-						}
-					}
-				
-				if (_inDatabase) {
-					_saDataOut[++_iNumOfTypeProduct] = _Database[j][1];
-					_saDataOut[++_iNumOfTypeProduct] = _Database[j][2];
-					_saDataOut[++_iNumOfTypeProduct] = _Database[j][3];
-					_saDataOut[++_iNumOfTypeProduct] = _sDataIn.substring(i-LengthOfNum[k],i);
-				} else{ //Product ID isn't exist in database, something error
-					_saDataOut[++_iNumOfTypeProduct]=_sTemp;
-					_saDataOut[++_iNumOfTypeProduct]="Not found ";
-					_saDataOut[++_iNumOfTypeProduct]="0";
-					_saDataOut[++_iNumOfTypeProduct] = _sDataIn.substring(i-LengthOfNum[k],i);;				
-					
-				}					
-				}
-			}else{////////////////////////////////////////////////
-			_saDataOut = new String[5];
-			_inDatabase = false;
-			_sTemp = _sDataIn.substring(1,LengthOfProductID+1);
-			
-			for (j = 2; j < 14; j++) { // Check Database
-				if (_Database[j][1].equals(_sTemp)) {
-					_inDatabase = true;
+		
+		if(!HasReadDatabase){
+			try {
+				switch(_iType){
+				case 0:
+				case 1:
+					_Database = _cReadDataBase.ReadExcel(_Path, 14, 4);
+					break;
+				case 2:
+					_Database = _cReadDataBase.ReadExcel(_Path, 14, 3);
 					break;
 				}
+			} catch (IOException e) {
+				System.out.println("Read Database error");
 			}
-			if (_inDatabase) {
-				if(_sDataIn.substring(0,1).equals("+"))
-					_saDataOut[0] = "Add more product";
-				else
-					_saDataOut[0] = "Remove product";
+			HasReadDatabase = true;
+		}//end if
+		String[] _saDataOut;
+		_saDataOut = new String[4 *iNumOfTypeProduct+1];
+		switch (_iType){
+			case 0:// normal packet
+				_saDataOut[0] = _sDataIn.substring(0, i); // packet ID
+				while(i < _sDataIn.length()) {
+					k++;
+					_sTemp = _sDataIn.substring(i, i+ LengthOfProductID);
+					i += LengthOfProductID+ LengthOfNum[k];
+					_inDatabase = false;
+					
+						for (j = 2; j < 14; j++) { // Check Database
+							if (_Database[j][1].equals(_sTemp)) {
+								_inDatabase = true;
+								break;
+							}
+						}
+					
+					if (_inDatabase) {
+						_saDataOut[++_iNumOfTypeProduct] = _Database[j][1];
+						_saDataOut[++_iNumOfTypeProduct] = _Database[j][2];
+						_saDataOut[++_iNumOfTypeProduct] = _Database[j][3];
+						_saDataOut[++_iNumOfTypeProduct] = _sDataIn.substring(i-LengthOfNum[k],i);
+					} else{ //Product ID isn't exist in database, something error
+						_saDataOut[++_iNumOfTypeProduct]=_sTemp;
+						_saDataOut[++_iNumOfTypeProduct]="Not found ";
+						_saDataOut[++_iNumOfTypeProduct]="0";
+						_saDataOut[++_iNumOfTypeProduct] = _sDataIn.substring(i-LengthOfNum[k],i);;				
+						
+					}					
+					}
+				break;
+			case 1:// add or remove product
+				_saDataOut = new String[5];
+				_inDatabase = false;
+				_sTemp = _sDataIn.substring(1,LengthOfProductID+1);
 				
-				_saDataOut[1] = _Database[j][1];
-				_saDataOut[2] = _Database[j][2];
-				_saDataOut[3] = _Database[j][3];
-				_saDataOut[4] = _sDataIn.substring(LengthOfProductID+ 1 ,LengthOfProductID+ 1+ LengthOfNum[0]);
+				for (j = 2; j < 14; j++) { // Check Database
+					if (_Database[j][1].equals(_sTemp)) {
+						_inDatabase = true;
+						break;
+					}
+				}
+				if (_inDatabase) {
+					if(_sDataIn.substring(0,1).equals("+"))
+						_saDataOut[0] = "Add more product";
+					else
+						_saDataOut[0] = "Remove product";
+					
+					_saDataOut[1] = _Database[j][1];
+					_saDataOut[2] = _Database[j][2];
+					_saDataOut[3] = _Database[j][3];
+					_saDataOut[4] = _sDataIn.substring(LengthOfProductID+ 1 ,LengthOfProductID+ 1+ LengthOfNum[0]);
+	
+				}else
+					_saDataOut[0] = "Not Found";
+				    _saDataOut[1]=_sDataIn.substring(1,LengthOfProductID+1);
+				break;
+			case 2:// status network
+				_saDataOut = new String[4];
+				_inDatabase = false;
+				_saDataOut[0] =  _sDataIn.substring(0 , 0 + MacAddLen);
+				_saDataOut[1] =  _sDataIn.substring(0 + MacAddLen , 0 + MacAddLen + ShortAddLen);
+				_saDataOut[2] =  _sDataIn.substring(0 + MacAddLen + ShortAddLen , 0 + MacAddLen + ShortAddLen + ParentAddLen);
 
-			}else
-				_saDataOut[0] = "Not Found";
-			    _saDataOut[1]=_sDataIn.substring(1,LengthOfProductID+1);
+				_sTemp = _sDataIn.substring(0 , 0 + MacAddLen);
+				
+				for (j = 2; j < 14; j++) { // Check Database
+					if (_Database[j][1].equals(_sTemp)) {
+						_inDatabase = true;
+						break;
+					}
+				}
+				if (_inDatabase) {
+					_saDataOut[3] = _Database[j][2];
+	
+				}else
+					_saDataOut[3] = "Not Found";
+				break;
 			
-		}
+		}//end switch
 		return _saDataOut;
 	}
 

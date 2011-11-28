@@ -2,14 +2,11 @@ package com.Uart;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Enumeration;
 
 import javax.comm.CommPortIdentifier;
 import javax.comm.SerialPort;
-import javax.comm.UnsupportedCommOperationException;
 
 public class Write {
-	static Enumeration portList;
 	static CommPortIdentifier portId;
 	static String messageString = "Hello, world!\n";
 	static SerialPort serialPort;
