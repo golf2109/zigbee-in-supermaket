@@ -44,6 +44,7 @@ public class ConvertDataIn {
 		String _sDataIn = new String(_bDataIn);
 		String _sDataOut = "";
 		int IndexLengthOfNum = 0;
+		int i = 3 + MacAddLen + LengthOfPacketID +1;
 		ErrorID = -1; 
 		switch (_bType){
 			case 0:// normal packet
@@ -60,7 +61,6 @@ public class ConvertDataIn {
 				}else{
 					LengthOfNum[IndexLengthOfNum++] = 1;
 				}
-				int i = 3 + MacAddLen + LengthOfPacketID +1;
 				int _iNumOfEachProduct;
 				while(i < 3 + MacAddLen + LengthOfPacketID +1 + iNumOfTypeProduct*(LengthOfProductID+1)){
 					_iNumOfEachProduct = _bDataIn[i+LengthOfProductID];
@@ -100,7 +100,13 @@ public class ConvertDataIn {
 				_sDataOut = _sDataIn.substring(2, 2 + LengthOfPacketID);
 				break;
 			case 3:// handle Status
-				_sDataOut = _sDataIn.substring(1, 1 + MacAddLen + ShortAddLen + ParentAddLen);
+				for(i = 1; i < 1 + MacAddLen + ShortAddLen + ParentAddLen; i++){
+					_sDataOut += My_Util.hex8Bit(My_Util.get8b(_bDataIn, i));
+					
+					if (i!=  MacAddLen + ShortAddLen + ParentAddLen)
+						_sDataOut += "-";					
+				}
+				//_sDataOut = _sDataIn.substring(1, 1 + MacAddLen + ShortAddLen + ParentAddLen);
 				break;
 		}//End Switch
 		return _sDataOut;
@@ -198,11 +204,11 @@ public class ConvertDataIn {
 			case 2:// status network
 				_saDataOut = new String[4];
 				_inDatabase = false;
-				_saDataOut[0] =  _sDataIn.substring(0 , 0 + MacAddLen);
-				_saDataOut[1] =  _sDataIn.substring(0 + MacAddLen , 0 + MacAddLen + ShortAddLen);
-				_saDataOut[2] =  _sDataIn.substring(0 + MacAddLen + ShortAddLen , 0 + MacAddLen + ShortAddLen + ParentAddLen);
+				_saDataOut[0] =  _sDataIn.substring(0 , 0 + MacAddLen*3 - 1);
+				_saDataOut[1] =  _sDataIn.substring(0 + MacAddLen*3 , 0 + MacAddLen*3 + ShortAddLen*2 + 1);
+				_saDataOut[2] =  _sDataIn.substring(0 + MacAddLen*3 + ShortAddLen*2 + 2 );
 
-				_sTemp = _sDataIn.substring(0 , 0 + MacAddLen);
+				_sTemp = _sDataIn.substring(0 , 0 + MacAddLen*3 - 1);
 				
 				for (j = 2; j < 14; j++) { // Check Database
 					if (_Database[j][1].equals(_sTemp)) {
