@@ -246,11 +246,13 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
       HalLedSet ( HAL_LED_4, HAL_LED_MODE_BLINK );
       break;
     case UART_PC_EVENT:
-      //'^'+[num of Baskets]+[Basket ID]
+      //Get command from pc to buffer
       HalLedSet ( HAL_LED_4, HAL_LED_MODE_ON );
       pc_buff = bufPop(pc_buff, pc_cmd_buff, &len);
-      HalUARTWrite(UART_PC_PORT, pc_cmd_buff, len);
+      //HalUARTWrite(UART_PC_PORT, pc_cmd_buff, len);
       
+      //Delete basket
+      //'^'+[num of Baskets]+[Basket ID]
       if(*(pc_cmd_buff)=='^'){
         uint8 idx = (*(pc_cmd_buff+1))-48,i;
         if(idx == 0){
@@ -263,6 +265,10 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
           SendMessage(addr,(char*)pc_cmd_buff);
           basket_del_trans = Cashier_TransID-1;
         }
+      }
+      //Get status of the device
+      if(*(pc_cmd_buff)=='S'){
+        SendMessage(BrdAddr,(char*)pc_cmd_buff);
       }
       
       break;
@@ -294,9 +300,9 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
           (void)sentEP;
           (void)sentTransID;          
           // Action taken when confirmation is received.
-          if(sentTransID == basket_del_trans && basket_del_trans!=0){
+          /*if(sentTransID == basket_del_trans && basket_del_trans!=0){
             HalUARTWrite(UART_PC_PORT, "Basket Deleted",osal_strlen("Basket deleted"));
-          }
+          }*/
           if(sentStatus != ZSuccess && sentTransID == basket_del_trans && basket_del_trans!=0){
             // The data wasn't delivered -- Do something
             bsk_cant_del[0]='E';
@@ -430,32 +436,40 @@ void SendMessage(afAddrType_t dstAddr, char* message){
  * @return  none
  */
 void SendBasketToPC(afIncomingMSGPacket_t *MSGpkt){
+  uint8 plen,blen;
   
-  uint8 blen = *(MSGpkt->cmd.Data+7);
-  //osal_stop_timerEx(Cashier_TaskID, TIMER_EVENT);
-  //HalUARTWrite(UART_PC_PORT, MSGpkt->cmd.Data, MSGpkt->cmd.DataLength);
-  
-  if(blen==BASKET_ID_LEN){
-    osal_memcpy(basket_recv,(MSGpkt->cmd.Data)+9,blen);
-    osal_memcpy(basket_sent,(basket_id_sent+1),BASKET_ID_LEN);
-   
-    //if basket_id received is basket_id sent, then send it to pc 
-    if(IsSameString(basket_recv,basket_sent,BASKET_ID_LEN)){
-      //send data to PC
-      uint8 plen = MSGpkt->cmd.DataLength;
+  char ch = (*MSGpkt->cmd.Data);
+  plen = MSGpkt->cmd.DataLength;
+  switch (ch){    
+  case 'S':
+    HalUARTWrite(UART_PC_PORT, MSGpkt->cmd.Data, plen);
+    break;
+  case 'H':
+    blen = *(MSGpkt->cmd.Data+7);
+    
+    if(blen==BASKET_ID_LEN){
+      osal_memcpy(basket_recv,(MSGpkt->cmd.Data)+9,blen);
+      osal_memcpy(basket_sent,(basket_id_sent+1),BASKET_ID_LEN);
       
-      osal_memcpy(BDel[basket_del_index].id,basket_recv,BASKET_ID_LEN);
-      BDel[basket_del_index].addr = MSGpkt->srcAddr;
-      basket_del_index++;
-      if(basket_del_index>MAX_BASKET_STORE){
-        basket_del_index = MAX_BASKET_STORE;
+      //if basket_id received is basket_id sent, then send it to pc 
+      if(IsSameString(basket_recv,basket_sent,BASKET_ID_LEN)){
+        //send data to PC
+        osal_memcpy(BDel[basket_del_index].id,basket_recv,BASKET_ID_LEN);
+        BDel[basket_del_index].addr = MSGpkt->srcAddr;
+        basket_del_index++;
+        if(basket_del_index>MAX_BASKET_STORE){
+          basket_del_index = MAX_BASKET_STORE;
+        }
+        
+        HalUARTWrite(UART_PC_PORT, MSGpkt->cmd.Data, plen);
+        osal_stop_timerEx(Cashier_TaskID, TIMER_EVENT);
       }
       
-      HalUARTWrite(UART_PC_PORT, MSGpkt->cmd.Data, plen);
-      osal_stop_timerEx(Cashier_TaskID, TIMER_EVENT);
+      //turn of the light to signal that cashier ready to process the next basket_id
+      HalLedSet ( HAL_LED_4, HAL_LED_MODE_OFF ); 
     }
-
-    //turn of the light to signal that cashier ready to process the next basket_id
-    HalLedSet ( HAL_LED_4, HAL_LED_MODE_OFF ); 
+    break;
+  default:
+    break;
   }
 }
