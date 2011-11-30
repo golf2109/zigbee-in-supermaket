@@ -26,7 +26,7 @@
 #define UART_PC_PORT		HAL_UART_PORT_0
 #define UART_PC_BAUD		0x00		            //9600
 #define UART_PC_RX_SIZE         32                          //max size of rx_buff
-#define UART_PC_TX_SIZE         MAX_PRODS*(PRODS_ID_LEN+1)  //max size of tx_buff
+#define UART_PC_TX_SIZE         1//MAX_PRODS*(PRODS_ID_LEN+1)  //max size of tx_buff
 #define UART_PC_THRESH          1//BASKET_ID_LEN	    //thresh of rx_buff, call back func will be call
 #define UART_PC_TIMEOUT         6			    //time rx_buff doesnt receive, call back func will be call
 #define UART_PC_EVENT           0x0002

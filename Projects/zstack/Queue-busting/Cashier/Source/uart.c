@@ -19,8 +19,6 @@ uint8 start_receive_prods = 0;
 /*********************************************************************
  * @brief   Initialization UART use for receive data from barcode scanner
  *
- * @param   0 or 1
- *
  * @return  none
  */
 void UART_Scanner_Init(void){ 
@@ -43,8 +41,6 @@ void UART_Scanner_Init(void){
 
 /*********************************************************************
  * @brief   Initialization UART use for receive data from barcode scanner
- *
- * @param   0 or 1
  *
  * @return  none
  */
@@ -101,18 +97,15 @@ HAL_ISR_FUNCTION(ReadScanner,URX1_VECTOR){
 static void UART_PC_process_evt(uint8 port, uint8 event){
   
   (void) port;
-  uint8 i=0;
   //read command from PC and then push it to pc_buff
   //if (event && (HAL_UART_RX_FULL | HAL_UART_RX_ABOUT_FULL)){
-  uint16 len = Hal_UART_RxBufLen (UART_PC_PORT);
+  uint16 tmplen = Hal_UART_RxBufLen (UART_PC_PORT);
+  uint8 len = (uint8)tmplen;
   if(len){
     uint8 tmp[32];
     HalUARTRead(UART_PC_PORT, tmp, len);
-    for(i=0;i<len;i++){
-      if(tmp[i]=='$'){
-        pc_buff = bufPush(pc_buff, tmp, len);
-        osal_set_event(Cashier_TaskID, UART_PC_EVENT);
-      }
-    }
+    tmp[len]=0x0d;
+    pc_buff = bufPush(pc_buff, tmp, len);
+    osal_set_event(Cashier_TaskID, UART_PC_EVENT);
   }
 }
