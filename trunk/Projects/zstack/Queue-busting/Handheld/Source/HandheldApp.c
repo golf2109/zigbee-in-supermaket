@@ -321,11 +321,13 @@ void HandheldApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
         {
           /**Add prefix to the Basket Frame*/
           pBasketFrame[0]=REPONSE_BASKET;
-          uiTmp=NLME_GetShortAddr();
-          pBasketFrame[1]=(uint8)((uiTmp>>8)&0xff);
-          pBasketFrame[2]=(uint8)(uiTmp&0xff);
-          pBasketFrame[3]=BASKET_ID_LEN;
-          pBasketFrame[4]=PRODS_ID_LEN;
+          //! MAC addr
+          CopyString(&pBasketFrame[1],(uint8*)NLME_GetExtAddr(),6);
+          //uiTmp=NLME_GetShortAddr();
+          //pBasketFrame[1]=(uint8)((uiTmp>>8)&0xff);
+          //pBasketFrame[2]=(uint8)(uiTmp&0xff);
+          pBasketFrame[7]=BASKET_ID_LEN;
+          pBasketFrame[8]=PRODS_ID_LEN;
           /**Send the Basket Frame*/
           if ( AF_DataRequest( &pkt->srcAddr, &HandheldApp_epDesc,
                          HANDHELDAPP_CLUSTERID,len,

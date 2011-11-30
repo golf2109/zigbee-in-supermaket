@@ -89,14 +89,14 @@ byte * ReadBasket(uint8 *pID,uint16 *len)
   if(addr){
     if(pBasketRep==NULL)
     {
-      pBasketRep=(byte*)osal_mem_alloc(sizeof(FlashMember)+4);
-      pMember=(FlashMember *)(pBasketRep+4);
+      pBasketRep=(byte*)osal_mem_alloc(sizeof(FlashMember)+8);
+      pMember=(FlashMember *)(pBasketRep+8);
     }
     FlashRead((ST_uint32)addr,
               (ST_uint8*)(pMember),BASKET_FLAG_SIZE+BASKET_ID_LEN+PRODS_NUM_SIZE);
     FlashRead((ST_uint32)addr+BASKET_FLAG_SIZE+BASKET_ID_LEN+PRODS_NUM_SIZE,
               (ST_uint8*)(pMember->data.prods),(pMember->data.len)*(sizeof(Product)));
-    *len = BASKET_ID_LEN+PRODS_NUM_SIZE+(uint16)((pMember->data.len)*(sizeof(Product)))+5;
+    *len = BASKET_ID_LEN+PRODS_NUM_SIZE+(uint16)((pMember->data.len)*(sizeof(Product)))+9;
     return pBasketRep;
   }else
     return NULL;
