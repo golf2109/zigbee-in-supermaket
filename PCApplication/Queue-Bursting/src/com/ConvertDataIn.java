@@ -45,10 +45,16 @@ public class ConvertDataIn {
 		String _sDataOut = "";
 		int IndexLengthOfNum = 0;
 		int i = 3 + MacAddLen + LengthOfPacketID +1;
+		int j;
 		ErrorID = -1; 
 		switch (_bType){
 			case 0:// normal packet
-				MacAdd = _sDataIn.substring(1, 1 + MacAddLen);
+				for( j =1; j < 1 + MacAddLen; j++ ){
+					
+					MacAdd += My_Util.hex8Bit(My_Util.get8b(_bDataIn, j));
+					if(j != MacAddLen) MacAdd += "-";
+					System.out.println(MacAdd);
+				}
 				LengthOfPacketID = _bDataIn[1 + MacAddLen];
 				LengthOfProductID = _bDataIn[2 + MacAddLen];
 				_sDataOut += _sDataIn.substring(3 + MacAddLen, 3 + MacAddLen + LengthOfPacketID)+ 
