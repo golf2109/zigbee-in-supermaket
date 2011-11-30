@@ -6,7 +6,8 @@
 #include "list.h"
 
 #define TIMER_EVENT       0x0003
-#define TIMER_TIME_OUT    1000  //miliseconds
+#define TIMER_TIME_OUT    5000  //miliseconds
+#define MAX_BASKET_STORE  8
 
 /*********************************************************************
  *   GLOBAL VARIABLES
@@ -14,11 +15,18 @@
 extern byte Cashier_TaskID;
 extern uint8 __xdata ScannerRxBuffer[20]; 
 extern uint8 __xdata ScannerRxIndex; 
-extern volatile uint8 have_basket;
+/*extern volatile uint8 have_basket;
 extern volatile uint8 have_pccmd;
 extern volatile uint8 ready_bcast;
-extern volatile uint8 to_com;
+*/
 extern uint8* basket_id_sent;
+
+typedef struct{
+  afAddrType_t addr;
+  uint8 id[BASKET_ID_LEN];
+}Basket_Del;
+extern uint8 basket_del_index;
+
 /*********************************************************************
  *   FUNCTION
  */
@@ -44,4 +52,5 @@ uint16 cashier_ProcessEvent( byte task_id, UINT16 events );
 void HandleKeys( byte shift, byte keys );
 void SendMessage(afAddrType_t dstAddr, char* message);
 void SendBasketToPC(afIncomingMSGPacket_t *MSGpkt);
+afAddrType_t Get_src_addr(uint8* id);
 #endif
