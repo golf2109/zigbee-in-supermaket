@@ -25,12 +25,13 @@
 
 /**Defines*/
 #define  START_ADDRESS      0x000080
-#define  FLASH_HEADER_SIZE  0x03
+#define  FLASH_HEADER_SIZE  0x04
 #define  BASKET_FLAG        "H"
 #define  BASKET_FLAG_SIZE   0x01
 /**Flash Header*/
 typedef   struct{
   uint8   num;
+  uint8   tail;
   uint16  size;
 }FlashHeader;
 /**Structure of Items in Flash*/
@@ -51,8 +52,20 @@ static FlashHeader  InfoBaskets;
 */
 void FlashReset(void){
   InfoBaskets.num=0;
+  InfoBaskets.tail=0;
   InfoBaskets.size=sizeof(Basket)+1;
   FlashWrite(START_ADDRESS,(uint8*) &InfoBaskets,FLASH_HEADER_SIZE);
+}
+/**
+*
+*/
+void CleanBasketMemmory(void)
+{
+  if(pBasketRep!=NULL)
+  {
+    osal_mem_free((uint8*)pBasketRep);
+    pBasketRep=NULL;
+  }
 }
 /**
 * @fn       FindBasket
@@ -66,12 +79,15 @@ ST_uint32 FindBasket(uint8 *pID)
   ST_uint32 addr,rt=0;
   FlashRead(START_ADDRESS,(uint8*) &InfoBaskets,FLASH_HEADER_SIZE);
   i=0;
-  while(i<InfoBaskets.num)
+  while(i<InfoBaskets.tail)
   {
     addr=(ST_uint32)(START_ADDRESS+FLASH_HEADER_SIZE+InfoBaskets.size*i);
     FlashRead(addr,(ST_uint8*)tmp,BASKET_FLAG_SIZE+BASKET_ID_LEN);
     if(tmp[0] && IsSameString((uint8*)tmp+1,pID,BASKET_ID_LEN))
+    {
       rt=addr;
+      break;
+    }
     i++;
   }
   return rt;
@@ -119,13 +135,15 @@ uint8 EraseBasket(uint8 *pID)
      FlashWrite((ST_uint32)(addr),&rt,1);
      //Update flash header
      InfoBaskets.num--;
+     if(addr==(START_ADDRESS+FLASH_HEADER_SIZE+InfoBaskets.size*InfoBaskets.tail))
+       InfoBaskets.tail--;
      FlashWrite(START_ADDRESS,(uint8*) &InfoBaskets,FLASH_HEADER_SIZE);
   }else
     rt= 1;
-  if(pMember!=NULL)
+  if(pBasketRep!=NULL)
   {
-    osal_mem_free((uint8*)pMember);
-    pMember=NULL;
+    osal_mem_free((uint8*)pBasketRep);
+    pBasketRep=NULL;
   }
   return rt;
 }
@@ -145,7 +163,7 @@ uint8 WriteBasket(Basket *pBasket)
   FlashRead(START_ADDRESS,(uint8*) &InfoBaskets,FLASH_HEADER_SIZE);
   //Find blank Basket
   i=0;
-  while(i<InfoBaskets.num)
+  while(i<InfoBaskets.tail)
   {
     addr=(ST_uint32)(START_ADDRESS+FLASH_HEADER_SIZE+InfoBaskets.size*i);
     FlashRead(addr,(ST_uint8*)&flag,1);
@@ -160,9 +178,10 @@ uint8 WriteBasket(Basket *pBasket)
   FlashWrite(addr+BASKET_FLAG_SIZE,(uint8*)pBasket,
              BASKET_ID_LEN+PRODS_NUM_SIZE+(pBasket->len)*(sizeof(Product)));
   //Update flash header
-  if(i >= InfoBaskets.num){
-    InfoBaskets.num++;
-    FlashWrite(START_ADDRESS,(uint8*) &InfoBaskets,FLASH_HEADER_SIZE);
+  if(i >= InfoBaskets.tail){
+    InfoBaskets.tail++;
   }
+  InfoBaskets.num++;
+  FlashWrite(START_ADDRESS,(uint8*) &InfoBaskets,FLASH_HEADER_SIZE);
   return 0;
 }

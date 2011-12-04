@@ -138,11 +138,12 @@ void ScannerHandleInput(ringBuf_t *pBuf)
           CurrentBasket=NULL;
           //!Signal to User: turn off LED
           HalLedSet( HAL_LED_4, HAL_LED_MODE_OFF );
+          HalLedSet( HAL_LED_2, HAL_LED_MODE_OFF );
         }else{
           //!New Basket;
-          osal_memcpy((uint8*)CurrentBasket->id,tmp,BASKET_ID_LEN);
+          //osal_memcpy((uint8*)CurrentBasket->id,tmp,BASKET_ID_LEN);
           //!Signal to User: turn on LED
-          HalLedSet( HAL_LED_4, HAL_LED_MODE_ON );
+          HalLedSet( HAL_LED_2, HAL_LED_MODE_ON );
         }
       }
       //!Basket ID is null
@@ -178,7 +179,7 @@ void ScannerHandleInput(ringBuf_t *pBuf)
         CurrentProduct->num=1;
         CurrentBasket->len++;
       }
-      HalLedSet( HAL_LED_2,HAL_LED_MODE_BLINK);
+      HalLedSet( HAL_LED_3,HAL_LED_MODE_BLINK);
     }
     /**Reset Flash*/
     else if(IsSameString("@FlashReset",tmp,11))

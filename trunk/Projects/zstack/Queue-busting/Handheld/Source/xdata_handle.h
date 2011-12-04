@@ -7,4 +7,5 @@ uint32 FindBasket(uint8 *pID);
 byte * ReadBasket(uint8 *pID,uint16 *len);
 uint8 WriteBasket(Basket *pBasket);
 uint8 EraseBasket(uint8 *pID);
+void CleanBasketMemmory(void);
 #endif //_EXTERNAL_DATA_H_
