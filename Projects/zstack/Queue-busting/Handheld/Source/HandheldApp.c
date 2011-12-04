@@ -341,6 +341,7 @@ void HandheldApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
           {
             /** Error occurred in request to send.*/
           }
+          CleanBasketMemmory();
         }
       }/**Receiving the deleting Basket request*/
       else if(pkt->cmd.Data[0]== DEL_BASKET)
@@ -366,7 +367,7 @@ void HandheldApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
         }
       }
       /**Receiving the status request*/
-      else if(pkt->cmd.Data[0]== STATUS_REQ && pkt->cmd.DataLength == 1)
+      else if(pkt->cmd.Data[0]== STATUS_REQ)
       {
         status_resp[0]=STATUS_REQ;
         //! MAC addr
