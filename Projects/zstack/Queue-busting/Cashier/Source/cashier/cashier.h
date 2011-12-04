@@ -50,7 +50,7 @@ static void UART_PC_process_evt(uint8 port, uint8 event);
 void cashier_Init( byte task_id );
 uint16 cashier_ProcessEvent( byte task_id, UINT16 events );
 void HandleKeys( byte shift, byte keys );
-void SendMessage(afAddrType_t dstAddr, char* message);
+void SendMessage(afAddrType_t dstAddr, char* message, int len);
 void SendBasketToPC(afIncomingMSGPacket_t *MSGpkt);
 afAddrType_t Get_src_addr(uint8* id);
 #endif

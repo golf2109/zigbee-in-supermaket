@@ -239,7 +239,7 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
           i=i-1;
         }
         *(basket_id_sent) = REQUEST_BASKET;
-        SendMessage(BrdAddr, (char*)basket_id_sent);
+        SendMessage(BrdAddr, (char*)basket_id_sent, BASKET_ID_LEN+1);
         //Start Timer
         osal_start_timerEx(Cashier_TaskID, TIMER_EVENT, TIMER_TIME_OUT);
       }
@@ -256,19 +256,19 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
       if(*(pc_cmd_buff)=='^'){
         uint8 idx = (*(pc_cmd_buff+1))-48,i;
         if(idx == 0){
-          SendMessage(BrdAddr,(char*)pc_cmd_buff);
+          SendMessage(BrdAddr,(char*)pc_cmd_buff,2);
           break;
         }
         for(i=0;i<idx;i++){
           osal_memcpy(bsk_del_buf,(pc_cmd_buff+2),BASKET_ID_LEN);
           afAddrType_t addr = Get_src_addr(bsk_del_buf);
-          SendMessage(addr,(char*)pc_cmd_buff);
+          SendMessage(addr,(char*)pc_cmd_buff, BASKET_ID_LEN+2);
           basket_del_trans = Cashier_TransID-1;
         }
       }
       //Get status of the device
       if(*(pc_cmd_buff)=='S'){
-        SendMessage(BrdAddr,(char*)pc_cmd_buff);
+        SendMessage(BrdAddr,(char*)pc_cmd_buff, 1);
       }
       
       break;
@@ -411,10 +411,10 @@ void HandleKeys( byte shift, byte keys ){
  *
  * @return  none
  */
-void SendMessage(afAddrType_t dstAddr, char* message){
+void SendMessage(afAddrType_t dstAddr, char* message, int len){
   
   char theMessageData[80];
-  osal_memcpy(theMessageData,message,osal_strlen(message));
+  osal_memcpy(theMessageData,message, len);
   if ( AF_DataRequest( &dstAddr, &epDesc, Q_BUSTING_CLUSTERID,
                        (byte)(osal_strlen( theMessageData ) + 1),
                        (byte *)&theMessageData,
