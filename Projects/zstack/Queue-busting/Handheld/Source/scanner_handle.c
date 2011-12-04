@@ -179,7 +179,7 @@ void ScannerHandleInput(ringBuf_t *pBuf)
         CurrentProduct->num=1;
         CurrentBasket->len++;
       }
-      HalLedSet( HAL_LED_3,HAL_LED_MODE_BLINK);
+      HalLedSet( HAL_LED_2,HAL_LED_MODE_BLINK);
     }
     /**Reset Flash*/
     else if(IsSameString("@FlashReset",tmp,11))
