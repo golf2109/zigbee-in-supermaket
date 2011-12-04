@@ -53,4 +53,5 @@ void HandleKeys( byte shift, byte keys );
 void SendMessage(afAddrType_t dstAddr, char* message, int len);
 void SendBasketToPC(afIncomingMSGPacket_t *MSGpkt);
 afAddrType_t Get_src_addr(uint8* id);
+bool have_basket(uint8* id);
 #endif
