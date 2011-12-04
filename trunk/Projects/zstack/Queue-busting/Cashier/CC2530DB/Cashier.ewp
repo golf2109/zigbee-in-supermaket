@@ -281,6 +281,7 @@
           <state>HAL_UART=TRUE</state>
           <state>CASHIER</state>
           <state>NV_RESTORE</state>
+          <state>HAL_LED</state>
         </option>
         <option>
           <name>CCPreprocFile</name>
