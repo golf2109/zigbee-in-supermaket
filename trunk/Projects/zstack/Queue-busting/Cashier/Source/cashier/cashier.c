@@ -288,7 +288,7 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
         uint8* status = "tatus";
         uint8 stat_len = osal_strlen((char*)status);
         if(IsSameString((basket_id_sent+1),status,stat_len)){
-          SendMessage(BrdAddr, (char*)basket_id_sent, stat_len+1);        
+          SendMessage(BrdAddr, "S", 1);        
         }
       }
 
