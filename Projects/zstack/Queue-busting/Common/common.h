@@ -55,7 +55,8 @@ typedef struct {
 
 #define ADD_PRODS_CODE			'+'	//add product to basket
 #define DEL_PRODS_CODE			'-'	//del product out of basket
-#define CHANGE_PRODS_LABEL		'@'	//change lable for data
+#define DEL_BASKET		'^'	//change lable for data
+#define RESET_FLASH             '@'
 /*********************************************************************
  * MODE
  */
