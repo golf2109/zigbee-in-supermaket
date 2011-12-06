@@ -282,6 +282,15 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
           SendMessage(BrdAddr, (char*)basket_id_sent, rs_len+1);        
         }
       }
+      
+      //Get status of all device
+      if((*basket_id_sent) == GET_STAT){
+        uint8* status = "tatus";
+        uint8 stat_len = osal_strlen((char*)status);
+        if(IsSameString((basket_id_sent+1),status,stat_len)){
+          SendMessage(BrdAddr, (char*)basket_id_sent, stat_len+1);        
+        }
+      }
 
       break;
     case UART_PC_EVENT:
@@ -307,7 +316,7 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
         }
       }
       //Get status of the device
-      if(*(pc_cmd_buff)=='S'){
+      if(*(pc_cmd_buff)== GET_STAT){
         HalLedSet ( HAL_LED_1, HAL_LED_MODE_ON );
         SendMessage(BrdAddr,(char*)pc_cmd_buff, 1);
       }
@@ -342,7 +351,8 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
           (void)sentTransID;          
           // Action taken when confirmation is received.
           HalLedSet ( HAL_LED_ALL, HAL_LED_MODE_OFF );
-          basket_del_index--;
+          if(sentTransID == basket_del_trans && basket_del_trans!=0)
+            basket_del_index--;
           /*if(sentTransID == basket_del_trans && basket_del_trans!=0){
             HalUARTWrite(UART_PC_PORT, "Basket Deleted",osal_strlen("Basket deleted"));
           }*/
