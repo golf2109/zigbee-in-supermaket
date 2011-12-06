@@ -279,6 +279,7 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
         uint8* reset = "FlashReset";
         uint8 rs_len = osal_strlen((char*)reset);
         if(IsSameString((basket_id_sent+1),reset,rs_len)){
+          //HalLedSet ( HAL_LED_2, HAL_LED_MODE_ON );
           SendMessage(BrdAddr, (char*)basket_id_sent, rs_len+1);        
         }
       }
@@ -288,6 +289,7 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
         uint8* status = "tatus";
         uint8 stat_len = osal_strlen((char*)status);
         if(IsSameString((basket_id_sent+1),status,stat_len)){
+          HalLedSet ( HAL_LED_1, HAL_LED_MODE_ON );
           SendMessage(BrdAddr, "S", 1);        
         }
       }
@@ -301,16 +303,17 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
       //Delete basket
       //'^'+[num of Baskets]+[Basket ID]
       if(*(pc_cmd_buff)== DEL_BASKET){
-        HalLedSet ( HAL_LED_2, HAL_LED_MODE_ON );
         uint8 idx = (*(pc_cmd_buff+1))-48,i;
         (*(pc_cmd_buff+1)) = idx;
         if(idx == 0){
           SendMessage(BrdAddr,(char*)pc_cmd_buff,2);
           break;
         }
+        
         for(i=0;i<idx;i++){
           osal_memcpy(bsk_del_buf,(pc_cmd_buff+2),BASKET_ID_LEN);
           afAddrType_t addr = Get_src_addr(bsk_del_buf);
+          HalLedSet ( HAL_LED_2, HAL_LED_MODE_ON );
           SendMessage(addr,(char*)pc_cmd_buff, BASKET_ID_LEN+2);
           basket_del_trans = Cashier_TransID-1;
         }
@@ -475,6 +478,7 @@ void SendBasketToPC(afIncomingMSGPacket_t *MSGpkt){
   switch (ch){    
   case 'S':
     HalUARTWrite(UART_PC_PORT, MSGpkt->cmd.Data, plen);
+    HalLedSet ( HAL_LED_1, HAL_LED_MODE_OFF );
     break;
   case 'H':
     blen = *(MSGpkt->cmd.Data+7);
