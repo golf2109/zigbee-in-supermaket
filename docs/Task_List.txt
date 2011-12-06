@@ -1,0 +1,11 @@
+- chapter 3 Hai will update later
+
+- chapter 4 Zigbee application layer (assign to Phuc)
+- chapter 5 Zigbee application support layer (assign to Vinh)
+- chapter 6 Zigbee network layer (assign to Hai)
+
+(if want to change, please inform to all)
+
+- chapter 8 cashier (assign to Vinh)
+- chapter 9 handheld (assign to Hai)
+- chapter 10 pc app and database (assign to Phuc)
