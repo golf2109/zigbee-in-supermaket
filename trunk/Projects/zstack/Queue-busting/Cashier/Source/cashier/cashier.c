@@ -241,11 +241,10 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
 
       basket_buff = bufPop(basket_buff, basket_id_sent, &len);
       
+      //Process for data_in is add/remove products      
       if(len==2){
         add_remove_mode = Check_utilize_products((char*)basket_id_sent);
       }
-      
-      //Process for data_in is add/remove products
       if(add_remove_mode){
         HalLedSet ( HAL_LED_3, HAL_LED_MODE_ON );
         if(len!=(PRODS_ID_LEN+1)) break;
@@ -260,9 +259,9 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
       }
       
       //Process for data_in is basket
-      if(have_basket(basket_id_sent)) break;
-      *(basket_id_sent+BASKET_ID_LEN+1) = 0x0d;        
       if(Check_basket_id_format((char*)basket_id_sent)){
+        *(basket_id_sent+BASKET_ID_LEN+1) = 0x0d;        
+        if(have_basket(basket_id_sent)) break;
         i = len;
         while(i){
           *(basket_id_sent+i) = *(basket_id_sent+i-1);
@@ -274,6 +273,15 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
         //Start Timer
         osal_start_timerEx(Cashier_TaskID, TIMER_EVENT, TIMER_TIME_OUT);
       }
+      
+      //Delete all baket in all handhled
+      if((*basket_id_sent) == RESET_FLASH){
+        uint8* reset = "FlashReset";
+        uint8 rs_len = osal_strlen((char*)reset);
+        if(IsSameString((basket_id_sent+1),reset,rs_len)){
+          SendMessage(BrdAddr, (char*)basket_id_sent, rs_len+1);        
+        }
+      }
 
       break;
     case UART_PC_EVENT:
@@ -283,7 +291,7 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
 
       //Delete basket
       //'^'+[num of Baskets]+[Basket ID]
-      if(*(pc_cmd_buff)=='^'){
+      if(*(pc_cmd_buff)== DEL_BASKET){
         HalLedSet ( HAL_LED_2, HAL_LED_MODE_ON );
         uint8 idx = (*(pc_cmd_buff+1))-48,i;
         (*(pc_cmd_buff+1)) = idx;
