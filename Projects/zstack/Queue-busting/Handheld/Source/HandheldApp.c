@@ -170,6 +170,7 @@ void HandheldApp_Init( byte task_id )
 
   ZDO_RegisterForZDOMsg( HandheldApp_TaskID, End_Device_Bind_rsp );
   ZDO_RegisterForZDOMsg( HandheldApp_TaskID, Match_Desc_rsp );
+
 }
 
 /*********************************************************************
@@ -351,7 +352,7 @@ void HandheldApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
         /**Erase all basket*/
         if(pkt->cmd.Data[1]==0)
         {
-          FlashReset();
+          APIFlashReset();
         }
         /**Erase the Baskets*/
         else

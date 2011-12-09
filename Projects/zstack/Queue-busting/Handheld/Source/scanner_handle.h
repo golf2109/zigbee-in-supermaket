@@ -2,4 +2,5 @@
 #define _SCANNER_HANDLE_H_
 void ScannerHandleInit(void);
 void ScannerHandleInput(ringBuf_t *pBuf);
+void APIFlashReset(void);
 #endif //_SCANNER_HANDLE_H_

@@ -1,6 +1,7 @@
 /*********************************************************************
- * When check out a basket, HAL_LED_4 is on. HAL_LED_4 is off when done
- * When add/del product, HAL_LED_3 is on. HAL_LED_3 is off when done
+ * When check out a basket, HAL_LED_1 is on. HAL_LED_1 is off when done
+ * When add/del product, HAL_LED_2 is on. HAL_LED_2 is off when done
+ *    when check product, HAL_LED_1 is on, sent data to PC HAL_LED_1 is off
  * When del basket, HAL_LED_2 is on. HAL_LED_2 is off when done, blink when error
  * When check status, HAL_LED_1 is on. HAL_LED_1 is off when done
  **********************************************************************/
@@ -47,6 +48,10 @@ uint8 basket_sent[BASKET_ID_LEN];
 Basket_Del BDel[MAX_BASKET_STORE];
 uint8 basket_del_index;
 byte basket_del_trans;
+
+byte prod_mode_led;
+byte del_basket_led;
+byte req_basket_led;
 
 /*********************************************************************
  * @brief   Check if it is basket_id format
@@ -199,7 +204,10 @@ void cashier_Init( byte task_id ){
   basket_id_sent = osal_mem_alloc(sizeof(uint8)*(BASKET_ID_LEN*2));
   pc_cmd_buff = osal_mem_alloc(sizeof(uint8)*(BASKET_ID_LEN*5));
   add_remove_mode = 0;
-  basket_del_index = 0;
+  basket_del_index = 0;  
+  prod_mode_led = 0;
+  del_basket_led = 0;
+  req_basket_led = 0;
 }
 
 /*********************************************************************
@@ -231,11 +239,24 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
   switch(events){
     case TIMER_EVENT:
       //'E'+[Error ID]+[Basket ID]      
-      bsk_not_found[0]='E';
-      bsk_not_found[1]=2;
-      osal_memcpy(bsk_not_found+2,basket_id_sent+1,BASKET_ID_LEN);
-      HalUARTWrite(UART_PC_PORT, bsk_not_found, BASKET_ID_LEN+2);
-      HalLedSet ( HAL_LED_4, HAL_LED_MODE_OFF );
+      if(req_basket_led){
+        bsk_not_found[0]='E';
+        bsk_not_found[1]=2;
+        osal_memcpy(bsk_not_found+2,basket_id_sent+1,BASKET_ID_LEN);
+        HalUARTWrite(UART_PC_PORT, bsk_not_found, BASKET_ID_LEN+2);
+        HalLedSet ( HAL_LED_1, HAL_LED_MODE_OFF );
+        req_basket_led = 0;
+      }
+      if(prod_mode_led){
+        HalLedSet ( HAL_LED_1, HAL_LED_MODE_OFF );
+        prod_mode_led = 0;
+      }
+      
+      if(del_basket_led){
+        HalLedSet ( HAL_LED_2, HAL_LED_MODE_OFF );
+        del_basket_led = 0;
+      }
+      
       break;
     case UART_SCANNER_EVENT:
 
@@ -246,7 +267,7 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
         add_remove_mode = Check_utilize_products((char*)basket_id_sent);
       }
       if(add_remove_mode){
-        HalLedSet ( HAL_LED_3, HAL_LED_MODE_ON );
+        HalLedSet ( HAL_LED_2, HAL_LED_MODE_ON );
         if(len!=(PRODS_ID_LEN+1)) break;
         uint8 pid[PRODS_ID_LEN+2];
         if(add_remove_mode == 1) pid[0] = ADD_PRODS_CODE;
@@ -254,9 +275,13 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
         osal_memcpy(pid+1,basket_id_sent,PRODS_ID_LEN);
         pid[PRODS_ID_LEN+1] = 0x01 ;
         HalUARTWrite(UART_PC_PORT, pid, PRODS_ID_LEN+2);
-        HalLedSet ( HAL_LED_3, HAL_LED_MODE_OFF );
+        HalLedSet ( HAL_LED_1,HAL_LED_MODE_ON );
+        prod_mode_led = 1;
+        osal_start_timerEx(Cashier_TaskID, TIMER_EVENT, 500);
         break;
       }
+      
+      HalLedSet ( HAL_LED_2, HAL_LED_MODE_OFF );
       
       //Process for data_in is basket
       if(Check_basket_id_format((char*)basket_id_sent)){
@@ -268,9 +293,10 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
           i=i-1;
         }
         *(basket_id_sent) = REQUEST_BASKET;
-        HalLedSet ( HAL_LED_4, HAL_LED_MODE_ON );
+        HalLedSet ( HAL_LED_1, HAL_LED_MODE_ON );
         SendMessage(BrdAddr, (char*)basket_id_sent, BASKET_ID_LEN+1);
         //Start Timer
+        req_basket_led = 1;
         osal_start_timerEx(Cashier_TaskID, TIMER_EVENT, TIMER_TIME_OUT);
       }
       
@@ -353,7 +379,8 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
           (void)sentEP;
           (void)sentTransID;          
           // Action taken when confirmation is received.
-          HalLedSet ( HAL_LED_ALL, HAL_LED_MODE_OFF );
+          //HalLedSet ( HAL_LED_ALL, HAL_LED_MODE_OFF );
+          HalLedSet ( HAL_LED_2, HAL_LED_MODE_OFF );
           if(sentTransID == basket_del_trans && basket_del_trans!=0)
             basket_del_index--;
           /*if(sentTransID == basket_del_trans && basket_del_trans!=0){
@@ -366,6 +393,8 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
             osal_memcpy(bsk_cant_del+2,pc_cmd_buff+2,BASKET_ID_LEN);
             HalUARTWrite(UART_PC_PORT, bsk_cant_del, BASKET_ID_LEN+2);
             HalLedBlink ( HAL_LED_2, 0, 50, 500 );
+            del_basket_led = 1;
+            osal_start_timerEx(Cashier_TaskID, TIMER_EVENT, 2000);
           }
           break;
 
@@ -498,11 +527,12 @@ void SendBasketToPC(afIncomingMSGPacket_t *MSGpkt){
         }
         //send data to PC
         HalUARTWrite(UART_PC_PORT, MSGpkt->cmd.Data, plen);
-        osal_stop_timerEx(Cashier_TaskID, TIMER_EVENT);
+        req_basket_led = 0;
+        //osal_stop_timerEx(Cashier_TaskID, TIMER_EVENT);
       }
       
       //turn of the light to signal that cashier ready to process the next basket_id
-      HalLedSet ( HAL_LED_4, HAL_LED_MODE_OFF ); 
+      HalLedSet ( HAL_LED_1, HAL_LED_MODE_OFF ); 
     }
     break;
   default:

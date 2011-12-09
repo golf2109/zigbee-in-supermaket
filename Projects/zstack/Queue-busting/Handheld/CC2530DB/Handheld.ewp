@@ -2406,6 +2406,8 @@
           <state>xLCD_SUPPORTED</state>
           <state>HAL_UART=TRUE</state>
           <state>xPOWER_SAVING</state>
+          <state>HAL_BOARD_CC2530EB_REV17</state>
+          <state>HAL_LED=TRUE</state>
         </option>
         <option>
           <name>CCPreprocFile</name>
