@@ -57,7 +57,7 @@ public class MainGui extends JFrame {
 	static JButton jClearButton = null;
 	Thread thread1;
 	Socket skt;
-	
+	  
 	private JLabel jLabel1IP = null;
 	private JTextField jTextFieldIP = null;
 	static String PathDatabase ="c:/temp/Database.xls";  //  @jve:decl-index=0:
@@ -95,7 +95,7 @@ public class MainGui extends JFrame {
 	private JRadioButton jEthernetRadioButton = null;
 	private JPanel jEthernetPanel = null;
 	private static JScrollPane jTableScrollPane = null;
-	private static JTable jTable = null;
+	private static JTable jTableMainGui = null;
 	JTextPane jTextPaneHcmut =null;
 	JTextPane jTextPaneQueueBrusting =null;
 	JTextPane jTextPaneDatalogic =null;
@@ -379,13 +379,13 @@ public class MainGui extends JFrame {
 			jClearButton.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
 					
-					JTableHeader header = jTable.getTableHeader();
+					JTableHeader header = jTableMainGui.getTableHeader();
 					header.setBackground(Color.blue);
 					for(int i=0; i<500; i++)
 						for(int j=0; j<5; j++)
 							_c[i][j]="";
 					
-					jTable.updateUI();
+					jTableMainGui.updateUI();
 					numofline =0;
 					numofpacket =0;
 					total =0;
@@ -487,7 +487,14 @@ public class MainGui extends JFrame {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
 					WriteFile write =  new WriteFile();
 					try {
-						write.WriteExcel(ConvertDataIn.GerneralPathToWrite(_d[0][0].substring(0,ConvertDataIn.LengthOfPacketID)));
+						String _path = ConvertDataIn.GerneralPathToWrite(_d[0][0].substring(0,ConvertDataIn.LengthOfPacketID));
+						write.WriteExcel(_path);
+						Process p = 
+							  Runtime.getRuntime()
+							   .exec("rundll32 url.dll,FileProtocolHandler " + _path);
+						jClearButton.doClick();
+						
+
 					} catch (Exception e1) {
 						System.out.println("Write error");;
 					} 
@@ -570,12 +577,8 @@ public class MainGui extends JFrame {
 				_c[++numofline][3] ="Total:          "+ _total ;
 				numofline++;
 				total += _total; // total price all packet
-				JTableHeader header = jTable.getTableHeader();
+				JTableHeader header = jTableMainGui.getTableHeader();
 				header.setBackground(Color.blue);
-				jTable.updateUI();
-				jTable.getSelectionModel().setSelectionInterval(numofline, 1);
-				jTable.scrollRectToVisible(new Rectangle(jTable.getCellRect(numofline, 0, true)));
-
 				jLabel1Total.setText("Total: ");
 				jLabel1Money.setText(total+" ");
 				NumOfNumProduct[numofpacket++]=_testGetData.iNumOfTypeProduct;
@@ -594,12 +597,12 @@ public class MainGui extends JFrame {
 				
 				if(_b[0].equals("Not Found"))
 				{
-					JTableHeader header = jTable.getTableHeader();
+					JTableHeader header = jTableMainGui.getTableHeader();
 					header.setBackground(Color.red);
 					System.out.println("Not in database");
 					numofline++;
 				}else{
-				JTableHeader header = jTable.getTableHeader();
+				JTableHeader header = jTableMainGui.getTableHeader();
 				header.setBackground(Color.blue);
 				_d[numofpacket][0] =_b[0];
 				_d[numofpacket][1] =_b[1];
@@ -623,11 +626,14 @@ public class MainGui extends JFrame {
 				
 				NumOfNumProduct[numofpacket++]=	1;
 				}
-				jTable.updateUI();
+				
 				jPrintButton.setEnabled(true);
 				jClearButton.setEnabled(true);
 			}
 		}
+			jTableMainGui.getSelectionModel().setSelectionInterval(numofline, 1);
+			jTableMainGui.scrollRectToVisible(new Rectangle(jTableMainGui.getCellRect(numofline, 0, true)));
+			jTableMainGui.updateUI();
      }
 	/**
 	 * This method initializes jButtonCheckComPort	
@@ -880,21 +886,21 @@ public class MainGui extends JFrame {
 	 * @return javax.swing.JTable	
 	 */
 	private JTable getJTable() {
-		if (jTable == null) {
-			jTable = new JTable(_c, col);
-			JTableHeader header = jTable.getTableHeader();
+		if (jTableMainGui == null) {
+			jTableMainGui = new JTable(_c, col);
+			JTableHeader header = jTableMainGui.getTableHeader();
 			header.setBackground(Color.red);
-			jTable.setEnabled(false);
-			jTable.setRowHeight(20);
-			jTable.setRowSelectionAllowed(false);
-			jTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-			jTable.setShowGrid(true);
-			jTable.setShowVerticalLines(false);
-			jTable.setShowHorizontalLines(false);
-			jTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-			jTable.setVisible(true);
+			jTableMainGui.setEnabled(false);
+			jTableMainGui.setRowHeight(20);
+			jTableMainGui.setRowSelectionAllowed(false);
+			jTableMainGui.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			jTableMainGui.setShowGrid(true);
+			jTableMainGui.setShowVerticalLines(false);
+			jTableMainGui.setShowHorizontalLines(false);
+			jTableMainGui.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+			jTableMainGui.setVisible(true);
 		}
-		return jTable;
+		return jTableMainGui;
 	}
 
 	/**
@@ -915,8 +921,8 @@ public class MainGui extends JFrame {
 							for(int j=0; j<5; j++)
 								_c[i][j]="";
 						NetworkGui.Index = 0;
-						if(NetworkGui.jTable != null)
-							NetworkGui.jTable.updateUI();
+						if(NetworkGui.jTableNetwork != null)
+							NetworkGui.jTableNetwork.updateUI();
 						Write.SendData("S");
 						NetworkGui _network = new NetworkGui();
 					}else{
