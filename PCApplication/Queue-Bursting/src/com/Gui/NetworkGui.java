@@ -26,12 +26,13 @@ public class NetworkGui extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private JPanel jContentPane = null;
 	private JScrollPane jTableScrollPane = null;
-	public static JTable jTable = null;
+	public static JTable jTableNetwork = null;
 	static String [][] 	_c = new String[100][5];
 	static String col[] = {"Index","MacAdd","ShortAdd","ParentAdd","ID"};
 	private JButton jButtonRefresh = null;
 	static String PathMactable ="c:/temp/MacTable.xls";  //  @jve:decl-index=0:
 	static int Index = 0;
+	public static NetworkGui NetGui = null;
 
 	/**
 	 * This is the default constructor
@@ -64,14 +65,6 @@ public class NetworkGui extends JFrame {
 	 * @return void
 	 */
 	private void initialize() {
-//		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//		this.setBackground(new Color(255, 102, 0));
-//		this.setSize(597, 312);
-//		this.setVisible(true);
-//		this.setLocation(350, 10);
-//		this.setContentPane(getJContentPane());
-//		this.setTitle("Network Status");
-//		this.setResizable(false);
 		this.setSize(597, 312);
 		this.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		this.setBackground(new Color(255, 102, 0));
@@ -80,7 +73,7 @@ public class NetworkGui extends JFrame {
 		this.setLocation(350, 10);
 		this.setContentPane(getJContentPane());
 		this.setResizable(false);
-
+		this.setAlwaysOnTop(true);
 	}
 
 	/**
@@ -121,16 +114,16 @@ public class NetworkGui extends JFrame {
 	 * @return javax.swing.JTable	
 	 */
 	private JTable getJTable() {
-		if (jTable == null) {
-			jTable = new JTable(_c, col);
-			JTableHeader header = jTable.getTableHeader();
+		if (jTableNetwork == null) {
+			jTableNetwork = new JTable(_c, col);
+			JTableHeader header = jTableNetwork.getTableHeader();
 			header.setBackground(Color.red);
-			jTable.setEnabled(false);
-			jTable.setShowGrid(true);
-			jTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-			jTable.setVisible(true);
+			jTableNetwork.setEnabled(false);
+			jTableNetwork.setShowGrid(true);
+			jTableNetwork.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+			jTableNetwork.setVisible(true);
 		}
-		return jTable;
+		return jTableNetwork;
 	}
 
 	/**
@@ -149,7 +142,7 @@ public class NetworkGui extends JFrame {
 						for(int j=0; j<5; j++)
 							_c[i][j]="";
 					Index = 0;
-					jTable.updateUI();
+					jTableNetwork.updateUI();
 					if(Read.serialPort != null){
 						Write.SendData("S");
 					}else{
@@ -172,17 +165,12 @@ public class NetworkGui extends JFrame {
 			_c[Index][i+1] = _b[i];
 		}
 		Index++;
-		if(jTable != null)
-			jTable.updateUI();
+		if(jTableNetwork != null)
+			jTableNetwork.updateUI();
 		
 		
 	}
 	public static void main(String arg[]) {
-		NetworkGui a = new NetworkGui(); 
+		NetGui = new NetworkGui(); 
 	}
-	
-			//34, 18, 531, 181));
-		
-	
-
-}  //  @jve:decl-index=0:visual-constraint="10,10"
+	}  

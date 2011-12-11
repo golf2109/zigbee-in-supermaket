@@ -29,8 +29,10 @@ public class ConvertDataIn {
 	public static int ShortAddLen = 2;
 	public static int ParentAddLen = 2;
 	public static String MacAdd ="";
-	private static boolean HasReadDatabase = false;
-	static String[][] _Database = null;
+	private static boolean HasReadDatabaseProduct = false;
+	private static boolean HasReadDatabaseNetwork = false;
+	static String[][] _DatabaseProduct = null;
+	static String[][] _DatabaseNetwork = null;
 	
 	
 	/* 
@@ -53,7 +55,6 @@ public class ConvertDataIn {
 					
 					MacAdd += My_Util.hex8Bit(My_Util.get8b(_bDataIn, j));
 					if(j != MacAddLen) MacAdd += "-";
-					System.out.println(MacAdd);
 				}
 				LengthOfPacketID = _bDataIn[1 + MacAddLen];
 				LengthOfProductID = _bDataIn[2 + MacAddLen];
@@ -133,21 +134,23 @@ public class ConvertDataIn {
 		String _sTemp;
 		ReadFile _cReadDataBase = new ReadFile();
 		
-		if(!HasReadDatabase){
+		if(!HasReadDatabaseProduct || !HasReadDatabaseNetwork){
 			try {
 				switch(_iType){
 				case 0:
 				case 1:
-					_Database = _cReadDataBase.ReadExcel(_Path, 14, 4);
+					_DatabaseProduct = _cReadDataBase.ReadExcel(_Path, 14, 4);
+					HasReadDatabaseProduct = true;
 					break;
 				case 2:
-					_Database = _cReadDataBase.ReadExcel(_Path, 14, 3);
+					_DatabaseNetwork = _cReadDataBase.ReadExcel(_Path, 14, 3);
+					HasReadDatabaseNetwork = true;
 					break;
 				}
 			} catch (IOException e) {
 				System.out.println("Read Database error");
 			}
-			HasReadDatabase = true;
+			
 		}//end if
 		String[] _saDataOut;
 		_saDataOut = new String[4 *iNumOfTypeProduct+1];
@@ -161,16 +164,16 @@ public class ConvertDataIn {
 					_inDatabase = false;
 					
 						for (j = 2; j < 14; j++) { // Check Database
-							if (_Database[j][1].equals(_sTemp)) {
+							if (_DatabaseProduct[j][1].equals(_sTemp)) {
 								_inDatabase = true;
 								break;
 							}
 						}
 					
 					if (_inDatabase) {
-						_saDataOut[++_iNumOfTypeProduct] = _Database[j][1];
-						_saDataOut[++_iNumOfTypeProduct] = _Database[j][2];
-						_saDataOut[++_iNumOfTypeProduct] = _Database[j][3];
+						_saDataOut[++_iNumOfTypeProduct] = _DatabaseProduct[j][1];
+						_saDataOut[++_iNumOfTypeProduct] = _DatabaseProduct[j][2];
+						_saDataOut[++_iNumOfTypeProduct] = _DatabaseProduct[j][3];
 						_saDataOut[++_iNumOfTypeProduct] = _sDataIn.substring(i-LengthOfNum[k],i);
 					} else{ //Product ID isn't exist in database, something error
 						_saDataOut[++_iNumOfTypeProduct]=_sTemp;
@@ -187,7 +190,7 @@ public class ConvertDataIn {
 				_sTemp = _sDataIn.substring(1,LengthOfProductID+1);
 				
 				for (j = 2; j < 14; j++) { // Check Database
-					if (_Database[j][1].equals(_sTemp)) {
+					if (_DatabaseProduct[j][1].equals(_sTemp)) {
 						_inDatabase = true;
 						break;
 					}
@@ -198,9 +201,9 @@ public class ConvertDataIn {
 					else
 						_saDataOut[0] = "Remove product";
 					
-					_saDataOut[1] = _Database[j][1];
-					_saDataOut[2] = _Database[j][2];
-					_saDataOut[3] = _Database[j][3];
+					_saDataOut[1] = _DatabaseProduct[j][1];
+					_saDataOut[2] = _DatabaseProduct[j][2];
+					_saDataOut[3] = _DatabaseProduct[j][3];
 					_saDataOut[4] = _sDataIn.substring(LengthOfProductID+ 1 ,LengthOfProductID+ 1+ LengthOfNum[0]);
 	
 				}else
@@ -217,13 +220,13 @@ public class ConvertDataIn {
 				_sTemp = _sDataIn.substring(0 , 0 + MacAddLen*3 - 1);
 				
 				for (j = 2; j < 14; j++) { // Check Database
-					if (_Database[j][1].equals(_sTemp)) {
+					if (_DatabaseNetwork[j][1].equals(_sTemp)) {
 						_inDatabase = true;
 						break;
 					}
 				}
 				if (_inDatabase) {
-					_saDataOut[3] = _Database[j][2];
+					_saDataOut[3] = _DatabaseNetwork[j][2];
 	
 				}else
 					_saDataOut[3] = "Not Found";
