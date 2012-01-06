@@ -60,7 +60,7 @@ public class MainGui extends JFrame {
 	  
 	private JLabel jLabel1IP = null;
 	private JTextField jTextFieldIP = null;
-	static String PathDatabase ="c:/temp/Database.xls";  //  @jve:decl-index=0:
+	static public String PathDatabase ="c:/temp/Database.xls";  //  @jve:decl-index=0:
 	private static JButton jPrintButton = null;
 	private Choice choice = null;
 	private static JLabel jLabel1PacketID = null;
@@ -160,6 +160,7 @@ public class MainGui extends JFrame {
 		this.setVisible(true);
 		this.setLocation(350, 10);
 		this.setContentPane(getJContentPane());
+		jButtonCheckComPort.doClick();
 	}
 
 	/**
