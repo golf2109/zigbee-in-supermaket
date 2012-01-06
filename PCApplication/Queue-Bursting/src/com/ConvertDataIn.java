@@ -33,6 +33,8 @@ public class ConvertDataIn {
 	private static boolean HasReadDatabaseNetwork = false;
 	static String[][] _DatabaseProduct = null;
 	static String[][] _DatabaseNetwork = null;
+	static public int MAXROWDATABASE =21;
+	static public int MAXROWNETWORK = 14;
 	
 	
 	/* 
@@ -139,11 +141,11 @@ public class ConvertDataIn {
 				switch(_iType){
 				case 0:
 				case 1:
-					_DatabaseProduct = _cReadDataBase.ReadExcel(_Path, 14, 4);
+					_DatabaseProduct = _cReadDataBase.ReadExcel(_Path, MAXROWDATABASE, 4);
 					HasReadDatabaseProduct = true;
 					break;
 				case 2:
-					_DatabaseNetwork = _cReadDataBase.ReadExcel(_Path, 14, 3);
+					_DatabaseNetwork = _cReadDataBase.ReadExcel(_Path, MAXROWNETWORK, 3);
 					HasReadDatabaseNetwork = true;
 					break;
 				}
@@ -163,8 +165,9 @@ public class ConvertDataIn {
 					i += LengthOfProductID+ LengthOfNum[k];
 					_inDatabase = false;
 					
-						for (j = 2; j < 14; j++) { // Check Database
-							if (_DatabaseProduct[j][1].equals(_sTemp)) {
+						for (j = 2; j < MAXROWDATABASE; j++) { // Check Database
+							System.out.println(_DatabaseProduct[j][1]);
+							if (_DatabaseProduct[j][1]!=null && _DatabaseProduct[j][1].equals(_sTemp)) {
 								_inDatabase = true;
 								break;
 							}
@@ -219,7 +222,7 @@ public class ConvertDataIn {
 
 				_sTemp = _sDataIn.substring(0 , 0 + MacAddLen*3 - 1);
 				
-				for (j = 2; j < 14; j++) { // Check Database
+				for (j = 2; j < MAXROWNETWORK; j++) { // Check Database
 					if (_DatabaseNetwork[j][1].equals(_sTemp)) {
 						_inDatabase = true;
 						break;
