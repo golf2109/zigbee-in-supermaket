@@ -302,11 +302,13 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
       
       //Delete all baket in all handhled
       if((*basket_id_sent) == RESET_FLASH){
-        uint8* reset = "@FlashReset";
+        uint8 reset[2];
+        reset[0] = '^';
+        reset[1] = 0x00;
         uint8 rs_len = osal_strlen((char*)reset);
-        if(IsSameString((basket_id_sent),reset,rs_len)){
+        if(IsSameString((basket_id_sent),"@FlashReset",11)){
           //HalLedSet ( HAL_LED_2, HAL_LED_MODE_ON );
-          SendMessage(BrdAddr, (char*)reset, rs_len);        
+          SendMessage(BrdAddr, (char*)reset, 2);        
         }
       }
       
