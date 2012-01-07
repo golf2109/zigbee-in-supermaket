@@ -286,7 +286,7 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
       //Process for data_in is basket
       if(Check_basket_id_format((char*)basket_id_sent)){
         *(basket_id_sent+BASKET_ID_LEN+1) = 0x0d;        
-        if(have_basket(basket_id_sent)) break;
+        //if(have_basket(basket_id_sent)) break;
         i = len;
         while(i){
           *(basket_id_sent+i) = *(basket_id_sent+i-1);
@@ -302,11 +302,11 @@ UINT16 cashier_ProcessEvent( byte task_id, UINT16 events ){
       
       //Delete all baket in all handhled
       if((*basket_id_sent) == RESET_FLASH){
-        uint8* reset = "FlashReset";
+        uint8* reset = "@FlashReset";
         uint8 rs_len = osal_strlen((char*)reset);
-        if(IsSameString((basket_id_sent+1),reset,rs_len)){
+        if(IsSameString((basket_id_sent),reset,rs_len)){
           //HalLedSet ( HAL_LED_2, HAL_LED_MODE_ON );
-          SendMessage(BrdAddr, (char*)basket_id_sent, rs_len+1);        
+          SendMessage(BrdAddr, (char*)reset, rs_len);        
         }
       }
       
