@@ -27,10 +27,10 @@ public class NetworkGui extends JFrame {
 	private JPanel jContentPane = null;
 	private JScrollPane jTableScrollPane = null;
 	public static JTable jTableNetwork = null;
-	static String [][] 	_c = new String[100][5];
-	static String col[] = {"Index","MacAdd","ShortAdd","ParentAdd","ID"};
+	static String[][] _c = new String[100][5];
+	static String col[] = { "Index", "MacAdd", "ShortAdd", "ParentAdd", "ID" };
 	private JButton jButtonRefresh = null;
-	static String PathMactable ="c:/temp/MacTable.xls";  //  @jve:decl-index=0:
+	static String PathMactable = "c:/temp/MacTable.xls"; // @jve:decl-index=0:
 	static int Index = 0;
 	public static NetworkGui NetGui = null;
 
@@ -41,21 +41,16 @@ public class NetworkGui extends JFrame {
 		super();
 		try {
 			// Set System L&F
-			UIManager.setLookAndFeel(
-			UIManager.getSystemLookAndFeelClassName());
-			} 
-			catch (UnsupportedLookAndFeelException e) {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (UnsupportedLookAndFeelException e) {
 			// handle exception
-			}
-			catch (ClassNotFoundException e) {
+		} catch (ClassNotFoundException e) {
 			// handle exception
-			}
-			catch (InstantiationException e) {
+		} catch (InstantiationException e) {
 			// handle exception
-			}
-			catch (IllegalAccessException e) {
+		} catch (IllegalAccessException e) {
 			// handle exception
-			}
+		}
 		initialize();
 	}
 
@@ -90,28 +85,29 @@ public class NetworkGui extends JFrame {
 		}
 		return jContentPane;
 	}
+
 	/**
-	 * This method initializes jTableScrollPane	
-	 * 	
-	 * @return javax.swing.JScrollPane	
+	 * This method initializes jTableScrollPane
+	 * 
+	 * @return javax.swing.JScrollPane
 	 */
 	private JScrollPane getJTableScrollPane() {
 		if (jTableScrollPane == null) {
 			jTableScrollPane = new JScrollPane(getJTable());
 			jTableScrollPane.setBounds(new Rectangle(34, 18, 531, 181));
-			jTableScrollPane.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
+			jTableScrollPane.setBorder(BorderFactory.createLineBorder(
+					Color.gray, 2));
 			jTableScrollPane.setViewportView(getJTable());
 			jTableScrollPane.setWheelScrollingEnabled(true);
-		
-			
+
 		}
 		return jTableScrollPane;
 	}
 
 	/**
-	 * This method initializes jTable	
-	 * 	
-	 * @return javax.swing.JTable	
+	 * This method initializes jTable
+	 * 
+	 * @return javax.swing.JTable
 	 */
 	private JTable getJTable() {
 		if (jTableNetwork == null) {
@@ -127,50 +123,55 @@ public class NetworkGui extends JFrame {
 	}
 
 	/**
-	 * This method initializes jButtonRefresh	
-	 * 	
-	 * @return javax.swing.JButton	
+	 * This method initializes jButtonRefresh
+	 * 
+	 * @return javax.swing.JButton
 	 */
 	private JButton getJButtonRefresh() {
 		if (jButtonRefresh == null) {
 			jButtonRefresh = new JButton();
 			jButtonRefresh.setBounds(new Rectangle(407, 232, 113, 33));
 			jButtonRefresh.setText("Refresh");
-			jButtonRefresh.addActionListener(new java.awt.event.ActionListener() {
-				public void actionPerformed(java.awt.event.ActionEvent e) {
-					for(int i=0; i < 100; i++)
-						for(int j=0; j<5; j++)
-							_c[i][j]="";
-					Index = 0;
-					jTableNetwork.updateUI();
-					if(Read.serialPort != null){
-						Write.SendData("S");
-					}else{
-						ErrorGui.Type = "Error";
-						ErrorGui.content1 = "Please connect com port";
-						MainGui.StatusGui = new ErrorGui();
-					}
-				}
-			});
+			jButtonRefresh
+					.addActionListener(new java.awt.event.ActionListener() {
+						public void actionPerformed(java.awt.event.ActionEvent e) {
+							for (int i = 0; i < 100; i++)
+								for (int j = 0; j < 5; j++)
+									_c[i][j] = "";
+							Index = 0;
+							jTableNetwork.updateUI();
+							if (Read.serialPort != null) {
+								Write.SendData("S");
+							} else {
+								ErrorGui.Type = "Error";
+								ErrorGui.content1 = "Please connect com port";
+								MainGui.StatusGui = new ErrorGui();
+							}
+						}
+					});
 		}
 		return jButtonRefresh;
 	}
-	public static void HandleStatus(){
+
+	public static void HandleStatus() {
 		ConvertDataIn _testGetData = new ConvertDataIn();
 		String _a = _testGetData.ConvertDataFromBoard(Read.readBuffer, 3);
-		String []_b = _testGetData.GetDataFromDatabase(PathMactable, _a, 2);
-		
-		_c[Index][0] = Index+1 + "";
-		for(int i = 0; i < 4; i++){
-			_c[Index][i+1] = _b[i];
+		String[] _b = _testGetData.GetDataFromDatabase(PathMactable, _a, 2);
+		int _i = 0;
+		while (_i < ConvertDataIn.iNumOfStatus) {
+			_c[Index][0] = Index + 1 + "";
+			for (int i = 0; i < 4; i++) {
+				_c[Index][i + 1] = _b[i];
+			}
+			Index++;
+			_i++;
 		}
-		Index++;
-		if(jTableNetwork != null)
+		if (jTableNetwork != null)
 			jTableNetwork.updateUI();
-		
-		
+
 	}
+
 	public static void main(String arg[]) {
-		NetGui = new NetworkGui(); 
+		NetGui = new NetworkGui();
 	}
-	}  
+}

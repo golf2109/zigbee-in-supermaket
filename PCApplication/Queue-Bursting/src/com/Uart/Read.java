@@ -21,7 +21,7 @@ public class Read implements Runnable, SerialPortEventListener {
 	public InputStream inputStream;
 	public static SerialPort serialPort;
 	public Thread readThread;
-	int numBytes;
+	public static int numBytes;
 	public static byte[] readBuffer = new byte[10000];
 	public static boolean bError = false;
 	public static boolean bStop = false;
@@ -157,25 +157,24 @@ public class Read implements Runnable, SerialPortEventListener {
 					
 				}
 				String _sIdentify = new String(readBuffer).substring(0, 1);
-				MainGui.ProcessData(0);
-//				switch (_sIdentify.charAt(0)){
-//					case 'H'://Packet 
-//							MainGui.ProcessData(0);
-//							break;
-//					case '+'://Add or Remove Product in Packet
-//					case '-':
-//							MainGui.ProcessData(1);
-//							break;
-//					case 'E'://Error 
-//							MainGui.HandleError();
-//							break;
-//					case 'S'://Status
-//							NetworkGui.HandleStatus();
-//							break;
-//				
-//				default:break;
-//				}
+				switch (_sIdentify.charAt(0)){
+					case 'H'://Packet 
+							MainGui.ProcessData(0);
+							break;
+					case '+'://Add or Remove Product in Packet
+					case '-':
+							MainGui.ProcessData(1);
+							break;
+					case 'E'://Error 
+							MainGui.HandleError();
+							break;
+					case 'S'://Status
+							NetworkGui.HandleStatus();
+							break;
 				
+				default:break;
+				}
+//				
 				
 					
 			} catch (IOException e) {
