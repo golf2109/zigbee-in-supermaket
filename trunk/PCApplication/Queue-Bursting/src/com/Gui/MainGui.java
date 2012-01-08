@@ -108,6 +108,7 @@ public class MainGui extends JFrame {
 	public static String defaultPort = " ";
 	private JButton jButtonNetwork = null;
 	static Map<String, String> packet = new HashMap<String, String>();
+	private static int iNumBeginAR = 0;
 
 	/**
 	 * This is the default constructor
@@ -575,7 +576,8 @@ public class MainGui extends JFrame {
 			_a = _testGetData.ConvertDataFromBoard(Read.readBuffer, 0);
 			_b = _testGetData.GetDataFromDatabase(PathDatabase, _a, 0);
 			String PID = _b[0].substring(0, ConvertDataIn.LengthOfPacketID);
-			if ((!packet.isEmpty() && packet.get(PID) == null)||packet.isEmpty()) {
+			if ((!packet.isEmpty() && packet.get(PID) == null)
+					|| packet.isEmpty()) {
 				packet.put(PID, PID);
 				length_d = 0;
 				_c[numofline++][0] = "Packet ID:  "
@@ -600,7 +602,7 @@ public class MainGui extends JFrame {
 
 					_total += Integer.parseInt(_b[t - 1])
 							* Integer.parseInt(_b[t]); // total price each
-														// packet
+					// packet
 
 				}
 				_c[++numofline][3] = "Total:          " + _total;
@@ -613,57 +615,100 @@ public class MainGui extends JFrame {
 				NumOfNumProduct[numofpacket++] = _testGetData.iNumOfTypeProduct;
 				jPrintButton.setEnabled(true);
 				jClearButton.setEnabled(true);
-			}
-			else{
+			} else {
 				JOptionPane.showMessageDialog(new JFrame(),
-	          		"Duplicate PacketId: "+ PID);
+						"Duplicate PacketId: " + PID);
 			}
 		} else {
+			boolean _bNotAppend = false;
+			int _ti = 0;
 			_a = _testGetData.ConvertDataFromBoard(Read.readBuffer, 1);
 			if (_a.substring(0, 1).equals("+")
 					|| _a.substring(0, 1).equals("-")) {
 				_b = _testGetData.GetDataFromDatabase(PathDatabase, _a, 1);
-
-				jLabel1PID.setText(_b[0]);
-				length_d = 0;
-				_c[numofline][0] = _b[0];
-				_c[numofline][1] = _b[1];
-
-				if (_b[0].equals("Not Found")) {
-					JTableHeader header = jTableMainGui.getTableHeader();
-					header.setBackground(Color.red);
-					System.out.println("Not in database");
-					numofline++;
-				} else {
-					JTableHeader header = jTableMainGui.getTableHeader();
-					header.setBackground(Color.blue);
-					_d[numofpacket][0] = _b[0];
-					_d[numofpacket][1] = _b[1];
-					_d[numofpacket][2] = _b[2];
-					_d[numofpacket][3] = _b[3];
-					_d[numofpacket][4] = _b[4];// for write
-
+				for (_ti = 0; _ti < numofline; _ti++) {
+					if (_c[_ti][1].equals(_b[1])) {
+						_bNotAppend = true;
+						break;
+					}
+				}
+				if(!_bNotAppend && _b[0].equals("Remove product")){
+					JOptionPane.showMessageDialog(new JFrame(),
+							"No product to remove! ");
+				}
+				else{
+				if (!_bNotAppend) {
+					jLabel1PID.setText(_b[0]);
+					length_d = 0;
+					_c[numofline][0] = _b[0];
 					_c[numofline][1] = _b[1];
-					_c[numofline][2] = _b[2];
-					_c[numofline][3] = _b[3];
-					_c[numofline++][4] = _b[4];
+
+					if (_b[0].equals("Not Found")) {
+						JTableHeader header = jTableMainGui.getTableHeader();
+						header.setBackground(Color.red);
+						System.out.println("Not in database");
+						numofline++;
+					} else {
+						JTableHeader header = jTableMainGui.getTableHeader();
+						header.setBackground(Color.blue);
+						_d[numofpacket][0] = _b[0];
+						_d[numofpacket][1] = _b[1];
+						_d[numofpacket][2] = _b[2];
+						_d[numofpacket][3] = _b[3];
+						_d[numofpacket][4] = _b[4];// for write
+
+						_c[numofline][1] = _b[1];
+						_c[numofline][2] = _b[2];
+						_c[numofline][3] = _b[3];
+						_c[numofline++][4] = _b[4];
+
+						_total += Integer.parseInt(_b[4])
+								* Integer.parseInt(_b[3]); // total
+						// price
+						// each
+						// packet
+
+						if (_b[0].equals("Add more product"))
+							total += _total; // total price all packet
+						else
+							total -= _total; // total price all packet
+
+						jLabel1Total.setText("Total ");
+						jLabel1Money.setText(total + "");
+
+						NumOfNumProduct[numofpacket++] = 1;
+					}
+				} else {
 
 					_total += Integer.parseInt(_b[4]) * Integer.parseInt(_b[3]); // total
-																					// price
-																					// each
-																					// packet
+					// price
+					// each
+					// packet
 
-					if (_b[0].equals("Add more product"))
+					if (_b[0].equals("Add more product")) {
 						total += _total; // total price all packet
-					else
-						total -= _total; // total price all packet
+						_c[_ti][4] = Integer.parseInt(_c[_ti][4]) + 1 + "";
+					} else {
+						_c[_ti][4] = Integer.parseInt(_c[_ti][4]) - 1 + "";
+						if (Integer.parseInt(_c[_ti][4]) < 0) {
+							JOptionPane.showMessageDialog(new JFrame(),
+									"Can't not renove anymore! ");
+							_c[_ti][4] = "0";
+						} else {
+							total -= _total; // total price all packet
+							if (total < 0) {
+								total = 0;
+							}
+						}
+					}
 
 					jLabel1Total.setText("Total ");
 					jLabel1Money.setText(total + "");
 
 					NumOfNumProduct[numofpacket++] = 1;
-				}
 
+				}
+			}
 				jPrintButton.setEnabled(true);
 				jClearButton.setEnabled(true);
 			}
