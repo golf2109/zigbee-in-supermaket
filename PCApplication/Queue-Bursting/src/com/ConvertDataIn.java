@@ -160,14 +160,18 @@ public class ConvertDataIn {
 				switch (_iType) {
 				case 0:
 				case 1:
-					_DatabaseProduct = _cReadDataBase.ReadExcel(_Path,
-							MAXROWDATABASE, 4);
-					HasReadDatabaseProduct = true;
+					if (!HasReadDatabaseProduct) {
+						_DatabaseProduct = _cReadDataBase.ReadExcel(_Path,
+								MAXROWDATABASE, 4);
+						HasReadDatabaseProduct = true;
+					}
 					break;
 				case 2:
-					_DatabaseNetwork = _cReadDataBase.ReadExcel(_Path,
-							MAXROWNETWORK, 3);
-					HasReadDatabaseNetwork = true;
+					if (!HasReadDatabaseNetwork) {
+						_DatabaseNetwork = _cReadDataBase.ReadExcel(_Path,
+								MAXROWNETWORK, 3);
+						HasReadDatabaseNetwork = true;
+					}
 					break;
 				}
 			} catch (IOException e) {
@@ -217,7 +221,7 @@ public class ConvertDataIn {
 			_inDatabase = false;
 			_sTemp = _sDataIn.substring(1, LengthOfProductID + 1);
 
-			for (j = 2; j < 14; j++) { // Check Database
+			for (j = 2; j < MAXROWDATABASE; j++) { // Check Database
 				if (_DatabaseProduct[j][1].equals(_sTemp)) {
 					_inDatabase = true;
 					break;
@@ -240,19 +244,23 @@ public class ConvertDataIn {
 			_saDataOut[1] = _sDataIn.substring(1, LengthOfProductID + 1);
 			break;
 		case 2:// status network
-			_saDataOut = new String[4*iNumOfStatus];
+			_saDataOut = new String[4 * iNumOfStatus];
 			_inDatabase = false;
 			int _iCount = 0;
 			int _iIndex = 0;
-			int _i=0;
+			int _i = 0;
 			while (_iCount < iNumOfStatus) {
-				_saDataOut[_i++] = _sDataIn.substring(_iIndex, _iIndex + MacAddLen * 3 - 1);
-				_saDataOut[_i++] = _sDataIn.substring(_iIndex + MacAddLen * 3, 
+				_saDataOut[_i++] = _sDataIn.substring(_iIndex, _iIndex
+						+ MacAddLen * 3 - 1);
+				_saDataOut[_i++] = _sDataIn.substring(_iIndex + MacAddLen * 3,
 						_iIndex + MacAddLen * 3 + ShortAddLen * 2 + 1);
-				_saDataOut[_i++] = _sDataIn.substring(_iIndex + MacAddLen * 3+ ShortAddLen * 2 + 2, 
-						_iIndex + MacAddLen * 3 + ShortAddLen * 2+ ParentAddLen * 2 + 3);
-				_sTemp = _sDataIn.substring(_iIndex, _iIndex + MacAddLen * 3 - 1);
-				_iIndex += MacAddLen * 3 + ShortAddLen * 2+ ParentAddLen * 2 + 4;
+				_saDataOut[_i++] = _sDataIn.substring(_iIndex + MacAddLen * 3
+						+ ShortAddLen * 2 + 2, _iIndex + MacAddLen * 3
+						+ ShortAddLen * 2 + ParentAddLen * 2 + 3);
+				_sTemp = _sDataIn.substring(_iIndex, _iIndex + MacAddLen * 3
+						- 1);
+				_iIndex += MacAddLen * 3 + ShortAddLen * 2 + ParentAddLen * 2
+						+ 4;
 
 				for (j = 2; j < MAXROWNETWORK; j++) { // Check Database
 					if (_DatabaseNetwork[j][1].equals(_sTemp)) {
@@ -266,9 +274,9 @@ public class ConvertDataIn {
 				} else
 					_saDataOut[_i++] = "Not Found";
 				_iCount++;
-				
+
 			}
-			
+
 			break;
 
 		}// end switch

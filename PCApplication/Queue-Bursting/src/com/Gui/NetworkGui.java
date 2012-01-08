@@ -158,10 +158,11 @@ public class NetworkGui extends JFrame {
 		String _a = _testGetData.ConvertDataFromBoard(Read.readBuffer, 3);
 		String[] _b = _testGetData.GetDataFromDatabase(PathMactable, _a, 2);
 		int _i = 0;
+		int _iCount=0;
 		while (_i < ConvertDataIn.iNumOfStatus) {
 			_c[Index][0] = Index + 1 + "";
-			for (int i = 0; i < 4; i++) {
-				_c[Index][i + 1] = _b[i];
+			for (int j = 0; j < 4; j++) {
+				_c[Index][j + 1] = _b[_iCount++];
 			}
 			Index++;
 			_i++;
